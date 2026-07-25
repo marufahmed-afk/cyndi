@@ -7,6 +7,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Cyndi",
+            exclude: ["Vendored/NOTICE.md"],
             resources: [
                 .copy("Resources/Fonts")
             ],
