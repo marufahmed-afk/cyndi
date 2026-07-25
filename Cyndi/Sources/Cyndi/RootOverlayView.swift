@@ -19,9 +19,11 @@ struct RootOverlayView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
 
-            DotsView(store: store, onTapNote: onTapDot)
-                .frame(height: bandHeight)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            if store.showDots || store.isOpen {
+                DotsView(store: store, onTapNote: onTapDot)
+                    .frame(height: bandHeight)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            }
         }
     }
 }

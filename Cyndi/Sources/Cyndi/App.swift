@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: NotchPanel!
     private var hosting: NSHostingView<RootOverlayView>?
     private var statusItem: NSStatusItem!
+    private var showDotsItem: NSMenuItem!
     private var hotkey: Hotkey?
     private var keyMonitor: Any?
 
@@ -112,6 +113,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
         menu.addItem(NSMenuItem(title: "Open Cyndi (⌘⇧Space)", action: #selector(toggle), keyEquivalent: ""))
         menu.addItem(.separator())
+        showDotsItem = NSMenuItem(title: "Show checklist dots", action: #selector(toggleShowDots), keyEquivalent: "")
+        showDotsItem.state = store.showDots ? .on : .off
+        menu.addItem(showDotsItem)
+        menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
         menu.items.last?.target = NSApp
@@ -169,6 +174,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func toggle() {
         store.isOpen ? close() : open()
+    }
+
+    @objc private func toggleShowDots() {
+        store.showDots.toggle()
+        showDotsItem.state = store.showDots ? .on : .off
     }
 
     private func open() {
