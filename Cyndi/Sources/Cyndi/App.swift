@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import Combine
 import Carbon.HIToolbox
 
 @main
@@ -18,10 +19,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = Store()
     private var dotsPanel: NotchPanel!
     private var editorPanel: NotchPanel!
+    private var editorHosting: NSHostingView<EditorView>?
     private var dimWindow: NSWindow!
     private var statusItem: NSStatusItem!
     private var hotkey: Hotkey?
-    private var cancellable: Any?
+    private var keyMonitor: Any?
+    private var storeObserver: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Fonts.register()
@@ -40,7 +43,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
 
-        cancellable = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+        storeObserver = store.objectWillChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                guard let self, self.store.isOpen else { return }
+                self.editorHosting?.layoutSubtreeIfNeeded()
+                self.positionEditor()
+            }
+
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self, self.store.isOpen else { return event }
             switch event.keyCode {
             case UInt16(kVK_Escape):
@@ -87,8 +98,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupEditorPanel() {
         editorPanel = NotchPanel(keyCapable: true)
-        let root = EditorView(store: store)
-        editorPanel.contentView = NSHostingView(rootView: root)
+        let hosting = NSHostingView(rootView: EditorView(store: store))
+        hosting.sizingOptions = [.intrinsicContentSize]
+        editorHosting = hosting
+        editorPanel.contentView = hosting
     }
 
     private func setupDim() {
@@ -112,13 +125,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                width: screen.frame.width, height: band)
         dotsPanel.setFrame(dotsFrame, display: true)
 
-        let panelW: CGFloat = 420
-        let panelH: CGFloat = 360
-        let ex = screen.frame.midX - panelW / 2
-        let ey = screen.frame.maxY - band - panelH
-        editorPanel.setFrame(NSRect(x: ex, y: ey, width: panelW, height: panelH), display: true)
-
+        positionEditor()
         dimWindow?.setFrame(screen.frame, display: false)
+    }
+
+    private func positionEditor() {
+        guard let screen = NSScreen.screenWithMouse else { return }
+        let band = screen.notchRect.height
+        let panelW: CGFloat = 420
+        let panelH = max(editorHosting?.fittingSize.height ?? 0, 1)
+        let ex = screen.frame.midX - panelW / 2
+        let top = screen.frame.maxY - band
+        editorPanel.setFrame(NSRect(x: ex, y: top - panelH, width: panelW, height: panelH), display: true)
     }
 
     @objc private func screensChanged() { layout() }
@@ -129,6 +147,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func open() {
         store.isOpen = true
+        editorHosting?.layoutSubtreeIfNeeded()
+        positionEditor()
         dimWindow?.orderFrontRegardless()
         editorPanel.present()
         editorPanel.makeKey()

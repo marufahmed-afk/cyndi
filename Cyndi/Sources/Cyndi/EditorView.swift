@@ -46,6 +46,9 @@ struct EditorView: View {
             UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20)
                 .strokeBorder(Ink.white(0.08), lineWidth: 1)
         )
+        .overlay(alignment: .top) {
+            Ink.panelBlack.frame(width: 196, height: 4)
+        }
         .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
         .onAppear { fieldFocused = true }
         .onChange(of: store.activeNoteID) { _ in fieldFocused = true }

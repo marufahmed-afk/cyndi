@@ -14,9 +14,13 @@ struct FillingDot: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
+        ZStack {
             Circle().fill(Ink.white(0.09))
-            color.frame(height: diameter * completion).clipShape(Circle())
+            Circle()
+                .fill(color)
+                .mask(alignment: .bottom) {
+                    Rectangle().frame(height: diameter * completion)
+                }
             Circle().strokeBorder(dimmed ? Ink.white(0.35) : color, lineWidth: 1.4)
         }
         .frame(width: diameter, height: diameter)
