@@ -37,6 +37,8 @@ struct EditorView: View {
         )
     }
 
+    static let shadowBleed = EdgeInsets(top: 0, leading: 55, bottom: 55, trailing: 55)
+
     var body: some View {
         VStack(spacing: 0) {
             Ink.panelBlack.frame(width: 420, height: bandHeight)
@@ -45,7 +47,8 @@ struct EditorView: View {
             }
         }
         .clipShape(editorShape)
-        .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
+        .shadow(color: .black.opacity(0.5), radius: 22, x: 0, y: 10)
+        .padding(Self.shadowBleed)
         .onAppear { fieldFocused = true }
         .onChange(of: store.activeNoteID) { fieldFocused = true }
     }
@@ -70,7 +73,7 @@ struct EditorView: View {
         }
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 15, trailing: 20))
         .frame(width: 420, alignment: .leading)
-        .background(Ink.panelBlack, in: editorShape)
+        .background(Ink.panelBlack)
     }
 
     private var header: some View {

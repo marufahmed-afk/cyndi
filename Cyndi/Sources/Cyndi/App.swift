@@ -145,6 +145,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let band = NSScreen.screenWithMouse?.notchRect.height ?? 30
         let hosting = NSHostingView(rootView: EditorView(store: store, bandHeight: band, onDelete: { [weak self] in self?.deleteChecklist() }))
         hosting.sizingOptions = [.intrinsicContentSize]
+        hosting.wantsLayer = true
+        hosting.layer?.backgroundColor = .clear
         editorHosting = hosting
         editorPanel.contentView = hosting
     }
@@ -177,9 +179,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func positionEditor() {
         guard let screen = NSScreen.screenWithMouse else { return }
-        let panelW: CGFloat = 420
+        let bleed = EditorView.shadowBleed
+        let panelW: CGFloat = 420 + bleed.leading + bleed.trailing
         let totalH = max(editorHosting?.fittingSize.height ?? 0, 1)
-        let top = screen.frame.maxY
+        let top = screen.frame.maxY + bleed.top
         let ex = screen.frame.midX - panelW / 2
         editorPanel.setFrame(NSRect(x: ex, y: top - totalH, width: panelW, height: totalH), display: true)
     }
