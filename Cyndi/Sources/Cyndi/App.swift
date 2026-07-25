@@ -52,7 +52,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
 
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
-            guard let self, self.store.isOpen else { return event }
+            guard let self else { return event }
+            let cmd = event.modifierFlags.contains(.command)
+
+            if cmd, event.keyCode == UInt16(kVK_ANSI_N) {
+                self.newChecklist(); return nil
+            }
+
+            guard self.store.isOpen else { return event }
+
+            if cmd {
+                switch event.keyCode {
+                case UInt16(kVK_ANSI_1): self.store.selectIndex(0); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_ANSI_2): self.store.selectIndex(1); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_ANSI_3): self.store.selectIndex(2); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_ANSI_4): self.store.selectIndex(3); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_ANSI_5): self.store.selectIndex(4); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_ANSI_6): self.store.selectIndex(5); self.editorPanel.makeKey(); return nil
+                default: return event
+                }
+            }
+
             switch event.keyCode {
             case UInt16(kVK_Escape):
                 self.close(); return nil
@@ -66,6 +86,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         dotsPanel.present()
+    }
+
+    private func newChecklist() {
+        store.newNote()
+        if !store.isOpen {
+            open()
+        } else {
+            editorPanel.makeKey()
+        }
     }
 
     private func step(_ delta: Int) {

@@ -131,7 +131,7 @@ struct EditorView: View {
 
     private var footer: some View {
         HStack {
-            Text("↵ new item · ← → switch note")
+            Text("↵ new item · ← → or ⌘1–6 switch · ⌘N new list")
             Spacer()
             Text("⌘⇧Space to close · saved locally")
         }

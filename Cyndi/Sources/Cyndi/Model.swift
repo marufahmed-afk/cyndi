@@ -65,6 +65,21 @@ final class Store: ObservableObject {
         draft = ""
     }
 
+    func selectIndex(_ index: Int) {
+        guard notes.indices.contains(index) else { return }
+        select(notes[index].id)
+    }
+
+    @discardableResult
+    func newNote() -> UUID {
+        let color = NoteColor.palette[notes.count % NoteColor.palette.count]
+        let note = Note(title: "untitled", color: color, items: [])
+        notes.insert(note, at: 0)
+        activeNoteID = note.id
+        draft = ""
+        return note.id
+    }
+
     func toggleItem(noteID: UUID, itemID: UUID) {
         guard let n = notes.firstIndex(where: { $0.id == noteID }),
               let i = notes[n].items.firstIndex(where: { $0.id == itemID }) else { return }
