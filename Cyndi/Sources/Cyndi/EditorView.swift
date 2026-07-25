@@ -42,12 +42,7 @@ struct EditorView: View {
         .frame(width: 420 + sideMargin * 2, alignment: .center)
         .padding(.top, bandHeight)
         .background(
-            Ink.panelBlack.clipShape(
-                UnevenRoundedRectangle(
-                    topLeadingRadius: 5, bottomLeadingRadius: 20,
-                    bottomTrailingRadius: 20, topTrailingRadius: 5,
-                    style: .continuous)
-            )
+            Ink.panelBlack.clipShape(NotchPanelShape(ear: sideMargin, bottom: 20))
         )
         .fixedSize()
         .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)

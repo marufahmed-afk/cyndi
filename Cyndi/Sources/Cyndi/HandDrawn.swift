@@ -40,6 +40,32 @@ struct SketchRoundedRect: InsettableShape {
     }
 }
 
+struct NotchPanelShape: Shape {
+    var ear: CGFloat = 12
+    var bottom: CGFloat = 20
+
+    func path(in r: CGRect) -> Path {
+        let e = ear
+        var p = Path()
+        p.move(to: CGPoint(x: r.minX, y: r.minY))
+        p.addLine(to: CGPoint(x: r.minX, y: r.minY + e))
+        p.addQuadCurve(to: CGPoint(x: r.minX + e, y: r.minY + e),
+                       control: CGPoint(x: r.minX + e, y: r.minY + e * 0.45))
+        p.addLine(to: CGPoint(x: r.minX + e, y: r.maxY - bottom))
+        p.addQuadCurve(to: CGPoint(x: r.minX + e + bottom, y: r.maxY),
+                       control: CGPoint(x: r.minX + e, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.maxX - e - bottom, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: r.maxX - e, y: r.maxY - bottom),
+                       control: CGPoint(x: r.maxX - e, y: r.maxY))
+        p.addLine(to: CGPoint(x: r.maxX - e, y: r.minY + e))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + e),
+                       control: CGPoint(x: r.maxX - e, y: r.minY + e * 0.45))
+        p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
+        p.closeSubpath()
+        return p
+    }
+}
+
 struct WobblingTick: Shape {
     func path(in rect: CGRect) -> Path {
         let s = rect.width / 16
