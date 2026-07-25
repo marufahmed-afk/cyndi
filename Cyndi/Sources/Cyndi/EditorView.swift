@@ -37,11 +37,14 @@ struct EditorView: View {
         )
     }
 
+    static let flare: CGFloat = 13
+    static let notchRadius: CGFloat = 13
+    static let panelWidth: CGFloat = 420
     static let shadowBleed = EdgeInsets(top: 0, leading: 55, bottom: 55, trailing: 55)
 
     var body: some View {
         VStack(spacing: 0) {
-            Ink.panelBlack.frame(width: 420, height: bandHeight)
+            Ink.panelBlack.frame(width: Self.panelWidth, height: bandHeight)
             if store.activeNote != nil {
                 panel
             }
@@ -53,11 +56,8 @@ struct EditorView: View {
         .onChange(of: store.activeNoteID) { fieldFocused = true }
     }
 
-    private var editorShape: UnevenRoundedRectangle {
-        UnevenRoundedRectangle(
-            topLeadingRadius: 0, bottomLeadingRadius: 20,
-            bottomTrailingRadius: 20, topTrailingRadius: 0,
-            style: .continuous)
+    private var editorShape: NotchPanelShape {
+        NotchPanelShape(flare: Self.flare, radius: Self.notchRadius)
     }
 
     private var panel: some View {
@@ -71,8 +71,8 @@ struct EditorView: View {
             progressBar
             footer
         }
-        .padding(EdgeInsets(top: 18, leading: 20, bottom: 15, trailing: 20))
-        .frame(width: 420, alignment: .leading)
+        .padding(EdgeInsets(top: 18, leading: 20 + Self.flare, bottom: 15, trailing: 20 + Self.flare))
+        .frame(width: Self.panelWidth, alignment: .leading)
         .background(Ink.panelBlack)
     }
 

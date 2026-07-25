@@ -180,7 +180,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func positionEditor() {
         guard let screen = NSScreen.screenWithMouse else { return }
         let bleed = EditorView.shadowBleed
-        let panelW: CGFloat = 420 + bleed.leading + bleed.trailing
+        let panelW = EditorView.panelWidth + bleed.leading + bleed.trailing
         let totalH = max(editorHosting?.fittingSize.height ?? 0, 1)
         let top = screen.frame.maxY + bleed.top
         let ex = screen.frame.midX - panelW / 2

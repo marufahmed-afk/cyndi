@@ -41,26 +41,27 @@ struct SketchRoundedRect: InsettableShape {
 }
 
 struct NotchPanelShape: Shape {
-    var ear: CGFloat = 12
-    var bottom: CGFloat = 20
+    var flare: CGFloat = 13
+    var radius: CGFloat = 13
 
     func path(in r: CGRect) -> Path {
-        let e = ear
+        let f = flare
+        let c = radius
+        let bodyMinX = r.minX + f
+        let bodyMaxX = r.maxX - f
         var p = Path()
         p.move(to: CGPoint(x: r.minX, y: r.minY))
-        p.addLine(to: CGPoint(x: r.minX, y: r.minY + e))
-        p.addQuadCurve(to: CGPoint(x: r.minX + e, y: r.minY + e),
-                       control: CGPoint(x: r.minX + e, y: r.minY + e * 0.45))
-        p.addLine(to: CGPoint(x: r.minX + e, y: r.maxY - bottom))
-        p.addQuadCurve(to: CGPoint(x: r.minX + e + bottom, y: r.maxY),
-                       control: CGPoint(x: r.minX + e, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.maxX - e - bottom, y: r.maxY))
-        p.addQuadCurve(to: CGPoint(x: r.maxX - e, y: r.maxY - bottom),
-                       control: CGPoint(x: r.maxX - e, y: r.maxY))
-        p.addLine(to: CGPoint(x: r.maxX - e, y: r.minY + e))
-        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY + e),
-                       control: CGPoint(x: r.maxX - e, y: r.minY + e * 0.45))
-        p.addLine(to: CGPoint(x: r.maxX, y: r.minY))
+        p.addQuadCurve(to: CGPoint(x: bodyMinX, y: r.minY + f),
+                       control: CGPoint(x: bodyMinX, y: r.minY))
+        p.addLine(to: CGPoint(x: bodyMinX, y: r.maxY - c))
+        p.addQuadCurve(to: CGPoint(x: bodyMinX + c, y: r.maxY),
+                       control: CGPoint(x: bodyMinX, y: r.maxY))
+        p.addLine(to: CGPoint(x: bodyMaxX - c, y: r.maxY))
+        p.addQuadCurve(to: CGPoint(x: bodyMaxX, y: r.maxY - c),
+                       control: CGPoint(x: bodyMaxX, y: r.maxY))
+        p.addLine(to: CGPoint(x: bodyMaxX, y: r.minY + f))
+        p.addQuadCurve(to: CGPoint(x: r.maxX, y: r.minY),
+                       control: CGPoint(x: bodyMaxX, y: r.minY))
         p.closeSubpath()
         return p
     }
