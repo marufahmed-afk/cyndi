@@ -24,7 +24,6 @@ struct HandCheckbox: View {
 struct EditorView: View {
     @ObservedObject var store: Store
     var bandHeight: CGFloat
-    var screenWidth: CGFloat
     @FocusState private var fieldFocused: Bool
 
     private var note: Note { store.activeNote }
@@ -32,12 +31,16 @@ struct EditorView: View {
     var body: some View {
         VStack(spacing: 0) {
             Ink.panelBlack
-                .frame(width: screenWidth, height: bandHeight)
+                .frame(width: 420, height: bandHeight)
             panel
         }
         .fixedSize()
+        .clipShape(UnevenRoundedRectangle(
+            topLeadingRadius: 7, bottomLeadingRadius: 20,
+            bottomTrailingRadius: 20, topTrailingRadius: 7))
+        .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
         .onAppear { fieldFocused = true }
-        .onChange(of: store.activeNoteID) { _ in fieldFocused = true }
+        .onChange(of: store.activeNoteID) { fieldFocused = true }
     }
 
     private var panel: some View {
@@ -54,12 +57,6 @@ struct EditorView: View {
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 15, trailing: 20))
         .frame(width: 420, alignment: .leading)
         .background(Ink.panelBlack)
-        .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20))
-        .overlay(
-            UnevenRoundedRectangle(bottomLeadingRadius: 20, bottomTrailingRadius: 20)
-                .strokeBorder(Ink.white(0.08), lineWidth: 1)
-        )
-        .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
     }
 
     private var header: some View {
