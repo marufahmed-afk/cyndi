@@ -80,6 +80,18 @@ final class Store: ObservableObject {
         return note.id
     }
 
+    @discardableResult
+    func deleteActiveNote() -> Bool {
+        guard notes.count > 0 else { return false }
+        let idx = activeIndex
+        notes.remove(at: idx)
+        draft = ""
+        guard !notes.isEmpty else { return false }
+        let next = min(idx, notes.count - 1)
+        activeNoteID = notes[next].id
+        return true
+    }
+
     func toggleItem(noteID: UUID, itemID: UUID) {
         guard let n = notes.firstIndex(where: { $0.id == noteID }),
               let i = notes[n].items.firstIndex(where: { $0.id == itemID }) else { return }

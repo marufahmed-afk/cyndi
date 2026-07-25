@@ -24,23 +24,29 @@ struct HandCheckbox: View {
 struct EditorView: View {
     @ObservedObject var store: Store
     var bandHeight: CGFloat
+    var onDelete: () -> Void = {}
     @FocusState private var fieldFocused: Bool
 
     private var note: Note { store.activeNote }
 
+    private let sideMargin: CGFloat = 12
+
     var body: some View {
-        VStack(spacing: 0) {
-            Ink.panelBlack
-                .frame(width: 420, height: bandHeight)
-            panel
-        }
-        .fixedSize()
-        .clipShape(UnevenRoundedRectangle(
-            topLeadingRadius: 7, bottomLeadingRadius: 20,
-            bottomTrailingRadius: 20, topTrailingRadius: 7))
-        .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
-        .onAppear { fieldFocused = true }
-        .onChange(of: store.activeNoteID) { fieldFocused = true }
+        panel
+            .frame(width: 420 + sideMargin * 2, alignment: .center)
+            .padding(.top, bandHeight)
+            .background(
+                Ink.panelBlack.clipShape(
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: 5, bottomLeadingRadius: 20,
+                        bottomTrailingRadius: 20, topTrailingRadius: 5,
+                        style: .continuous)
+                )
+            )
+            .fixedSize()
+            .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
+            .onAppear { fieldFocused = true }
+            .onChange(of: store.activeNoteID) { fieldFocused = true }
     }
 
     private var panel: some View {
@@ -56,7 +62,6 @@ struct EditorView: View {
         }
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 15, trailing: 20))
         .frame(width: 420, alignment: .leading)
-        .background(Ink.panelBlack)
     }
 
     private var header: some View {
@@ -70,6 +75,13 @@ struct EditorView: View {
             Text("\(note.doneCount)/\(note.items.count)")
                 .font(Fonts.kalam(12))
                 .foregroundStyle(Ink.white(0.45))
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Ink.white(0.35))
+            }
+            .buttonStyle(.plain)
+            .help("Delete this checklist (⌘⌫)")
         }
         .padding(.bottom, 4)
     }
@@ -136,7 +148,7 @@ struct EditorView: View {
 
     private var footer: some View {
         HStack {
-            Text("↵ new item · ← → or ⌘1–6 switch · ⌘N new list")
+            Text("↵ new item · ← → switch · ⌘N new · ⌘⌫ delete")
             Spacer()
             Text("⌘⇧Space to close · saved locally")
         }

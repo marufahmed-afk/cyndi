@@ -69,6 +69,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 case UInt16(kVK_ANSI_4): self.store.selectIndex(3); self.editorPanel.makeKey(); return nil
                 case UInt16(kVK_ANSI_5): self.store.selectIndex(4); self.editorPanel.makeKey(); return nil
                 case UInt16(kVK_ANSI_6): self.store.selectIndex(5); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
+                    self.deleteChecklist(); return nil
                 default: return event
                 }
             }
@@ -94,6 +96,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             open()
         } else {
             editorPanel.makeKey()
+        }
+    }
+
+    private func deleteChecklist() {
+        let hasRemaining = store.deleteActiveNote()
+        if hasRemaining {
+            editorPanel.makeKey()
+        } else {
+            close()
         }
     }
 
@@ -128,7 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupEditorPanel() {
         editorPanel = NotchPanel(keyCapable: true)
         let band = NSScreen.screenWithMouse?.notchRect.height ?? 30
-        let hosting = NSHostingView(rootView: EditorView(store: store, bandHeight: band))
+        let hosting = NSHostingView(rootView: EditorView(store: store, bandHeight: band, onDelete: { [weak self] in self?.deleteChecklist() }))
         hosting.sizingOptions = [.intrinsicContentSize]
         editorHosting = hosting
         editorPanel.contentView = hosting
@@ -155,15 +166,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                width: screen.frame.width, height: band)
         dotsPanel.setFrame(dotsFrame, display: true)
 
-        editorHosting?.rootView = EditorView(store: store, bandHeight: band)
+        editorHosting?.rootView = EditorView(store: store, bandHeight: band, onDelete: { [weak self] in self?.deleteChecklist() })
         positionEditor()
         dimWindow?.setFrame(screen.frame, display: false)
     }
 
     private func positionEditor() {
         guard let screen = NSScreen.screenWithMouse else { return }
-        let panelW: CGFloat = 420
-        let totalH = max(editorHosting?.fittingSize.height ?? 0, 1)
+        let fit = editorHosting?.fittingSize ?? .zero
+        let panelW = max(fit.width, 1)
+        let totalH = max(fit.height, 1)
         let top = screen.frame.maxY
         let ex = screen.frame.midX - panelW / 2
         editorPanel.setFrame(NSRect(x: ex, y: top - totalH, width: panelW, height: totalH), display: true)
