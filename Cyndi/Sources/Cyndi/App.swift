@@ -1,0 +1,155 @@
+import SwiftUI
+import AppKit
+import Carbon.HIToolbox
+
+@main
+struct CyndiMain {
+    static func main() {
+        let app = NSApplication.shared
+        let delegate = AppDelegate()
+        app.delegate = delegate
+        app.setActivationPolicy(.accessory)
+        app.run()
+    }
+}
+
+@MainActor
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    private let store = Store()
+    private var dotsPanel: NotchPanel!
+    private var editorPanel: NotchPanel!
+    private var dimWindow: NSWindow!
+    private var statusItem: NSStatusItem!
+    private var hotkey: Hotkey?
+    private var cancellable: Any?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        Fonts.register()
+        setupStatusItem()
+        setupDim()
+        setupDotsPanel()
+        setupEditorPanel()
+        layout()
+
+        hotkey = Hotkey(keyCode: UInt32(kVK_Space),
+                        modifiers: UInt32(cmdKey | shiftKey)) { [weak self] in
+            self?.toggle()
+        }
+
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(screensChanged),
+            name: NSApplication.didChangeScreenParametersNotification, object: nil)
+
+        cancellable = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self, self.store.isOpen else { return event }
+            switch event.keyCode {
+            case UInt16(kVK_Escape):
+                self.close(); return nil
+            case UInt16(kVK_LeftArrow) where self.store.draft.isEmpty:
+                self.step(-1); return nil
+            case UInt16(kVK_RightArrow) where self.store.draft.isEmpty:
+                self.step(1); return nil
+            default:
+                return event
+            }
+        }
+
+        dotsPanel.present()
+    }
+
+    private func step(_ delta: Int) {
+        let count = store.notes.count
+        guard count > 0 else { return }
+        let next = (store.activeIndex + delta + count) % count
+        store.select(store.notes[next].id)
+        editorPanel.makeKey()
+    }
+
+    private func setupStatusItem() {
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        statusItem.button?.title = "◗"
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Open Cyndi (⌘⇧Space)", action: #selector(toggle), keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.items.forEach { $0.target = self }
+        menu.items.last?.target = NSApp
+        statusItem.menu = menu
+    }
+
+    private func setupDotsPanel() {
+        dotsPanel = NotchPanel(keyCapable: false)
+        let root = DotsView(store: store) { [weak self] id in self?.tapDot(id) }
+        let hosting = NSHostingView(rootView: root)
+        hosting.wantsLayer = true
+        dotsPanel.contentView = hosting
+    }
+
+    private func setupEditorPanel() {
+        editorPanel = NotchPanel(keyCapable: true)
+        let root = EditorView(store: store)
+        editorPanel.contentView = NSHostingView(rootView: root)
+    }
+
+    private func setupDim() {
+        guard let screen = NSScreen.screenWithMouse else { return }
+        dimWindow = NSWindow(contentRect: screen.frame, styleMask: .borderless,
+                             backing: .buffered, defer: false)
+        dimWindow.isOpaque = false
+        dimWindow.backgroundColor = NSColor(red: 6/255, green: 9/255, blue: 11/255, alpha: 0.68)
+        dimWindow.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.mainMenuWindow)) - 1)
+        dimWindow.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
+        dimWindow.ignoresMouseEvents = false
+        dimWindow.isReleasedWhenClosed = false
+        let click = NSClickGestureRecognizer(target: self, action: #selector(dimClicked))
+        dimWindow.contentView?.addGestureRecognizer(click)
+    }
+
+    private func layout() {
+        guard let screen = NSScreen.screenWithMouse else { return }
+        let band = screen.notchRect.height
+        let dotsFrame = NSRect(x: screen.frame.minX, y: screen.frame.maxY - band,
+                               width: screen.frame.width, height: band)
+        dotsPanel.setFrame(dotsFrame, display: true)
+
+        let panelW: CGFloat = 420
+        let panelH: CGFloat = 360
+        let ex = screen.frame.midX - panelW / 2
+        let ey = screen.frame.maxY - band - panelH
+        editorPanel.setFrame(NSRect(x: ex, y: ey, width: panelW, height: panelH), display: true)
+
+        dimWindow?.setFrame(screen.frame, display: false)
+    }
+
+    @objc private func screensChanged() { layout() }
+
+    @objc private func toggle() {
+        store.isOpen ? close() : open()
+    }
+
+    private func open() {
+        store.isOpen = true
+        dimWindow?.orderFrontRegardless()
+        editorPanel.present()
+        editorPanel.makeKey()
+        dotsPanel.orderFrontRegardless()
+    }
+
+    private func close() {
+        store.isOpen = false
+        store.draft = ""
+        editorPanel.orderOut(nil)
+        dimWindow?.orderOut(nil)
+    }
+
+    private func tapDot(_ id: UUID) {
+        if store.isOpen && store.activeNoteID == id {
+            close()
+        } else {
+            store.select(id)
+            if !store.isOpen { open() } else { editorPanel.makeKey() }
+        }
+    }
+
+    @objc private func dimClicked() { close() }
+}
