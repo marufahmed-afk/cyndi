@@ -127,7 +127,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func setupEditorPanel() {
         editorPanel = NotchPanel(keyCapable: true)
-        let hosting = NSHostingView(rootView: EditorView(store: store))
+        let screen = NSScreen.screenWithMouse
+        let band = screen?.notchRect.height ?? 30
+        let width = screen?.frame.width ?? 1512
+        let hosting = NSHostingView(rootView: EditorView(store: store, bandHeight: band, screenWidth: width))
         hosting.sizingOptions = [.intrinsicContentSize]
         editorHosting = hosting
         editorPanel.contentView = hosting
@@ -154,18 +157,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                width: screen.frame.width, height: band)
         dotsPanel.setFrame(dotsFrame, display: true)
 
+        editorHosting?.rootView = EditorView(store: store, bandHeight: band, screenWidth: screen.frame.width)
         positionEditor()
         dimWindow?.setFrame(screen.frame, display: false)
     }
 
     private func positionEditor() {
         guard let screen = NSScreen.screenWithMouse else { return }
-        let band = screen.notchRect.height
-        let panelW: CGFloat = 420
-        let panelH = max(editorHosting?.fittingSize.height ?? 0, 1)
-        let ex = screen.frame.midX - panelW / 2
-        let top = screen.frame.maxY - band
-        editorPanel.setFrame(NSRect(x: ex, y: top - panelH, width: panelW, height: panelH), display: true)
+        let width = screen.frame.width
+        let totalH = max(editorHosting?.fittingSize.height ?? 0, 1)
+        let top = screen.frame.maxY
+        editorPanel.setFrame(NSRect(x: screen.frame.minX, y: top - totalH, width: width, height: totalH), display: true)
     }
 
     @objc private func screensChanged() { layout() }
