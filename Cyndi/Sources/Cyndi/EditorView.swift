@@ -28,7 +28,7 @@ struct EditorView: View {
     @FocusState private var fieldFocused: Bool
     @FocusState private var titleFocused: Bool
 
-    private var note: Note { store.activeNote ?? Note(title: "", color: .printYellow, items: []) }
+    private var note: Note { store.activeNote ?? Note(title: "", colorID: NoteColor.printYellow.id, items: []) }
 
     private var titleBinding: Binding<String> {
         Binding(

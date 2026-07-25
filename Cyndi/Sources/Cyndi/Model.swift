@@ -11,19 +11,25 @@ struct NoteColor: Identifiable, Hashable {
     static let violet = NoteColor(id: "violet", color: Color(hex: 0x7B5EA7))
 
     static let palette: [NoteColor] = [printYellow, processCyan, processMagenta, green, violet]
+
+    static func named(_ id: String) -> NoteColor {
+        palette.first { $0.id == id } ?? printYellow
+    }
 }
 
-struct ChecklistItem: Identifiable {
-    let id = UUID()
+struct ChecklistItem: Identifiable, Codable {
+    var id = UUID()
     var text: String
     var done: Bool = false
 }
 
-struct Note: Identifiable {
-    let id = UUID()
+struct Note: Identifiable, Codable {
+    var id = UUID()
     var title: String
-    var color: NoteColor
+    var colorID: String
     var items: [ChecklistItem]
+
+    var color: NoteColor { NoteColor.named(colorID) }
 
     var completion: Double {
         guard !items.isEmpty else { return 0 }
@@ -35,26 +41,17 @@ struct Note: Identifiable {
 
 @MainActor
 final class Store: ObservableObject {
-    @Published var notes: [Note]
+    @Published var notes: [Note] { didSet { persist() } }
     @Published var activeNoteID: UUID
     @Published var isOpen: Bool = false
     @Published var draft: String = ""
 
+    private let storage = NoteStorage()
+
     init() {
-        let seed = [
-            Note(title: "spike", color: .printYellow, items: [
-                ChecklistItem(text: "dots hug the notch", done: true),
-                ChecklistItem(text: "expand from the notch", done: true),
-                ChecklistItem(text: "one editable note", done: false)
-            ]),
-            Note(title: "groceries", color: .processCyan, items: [
-                ChecklistItem(text: "oat milk", done: false),
-                ChecklistItem(text: "coffee", done: true)
-            ]),
-            Note(title: "ideas", color: .processMagenta, items: [])
-        ]
-        notes = seed
-        activeNoteID = seed[0].id
+        let loaded = storage.load()
+        notes = loaded
+        activeNoteID = loaded.first?.id ?? UUID()
     }
 
     var activeIndex: Int { notes.firstIndex { $0.id == activeNoteID } ?? 0 }
@@ -73,7 +70,7 @@ final class Store: ObservableObject {
     @discardableResult
     func newNote() -> UUID {
         let color = NoteColor.palette[notes.count % NoteColor.palette.count]
-        let note = Note(title: "untitled", color: color, items: [])
+        let note = Note(title: "untitled", colorID: color.id, items: [])
         notes.insert(note, at: 0)
         activeNoteID = note.id
         draft = ""
@@ -108,6 +105,28 @@ final class Store: ObservableObject {
         guard !text.isEmpty, !notes.isEmpty else { return }
         notes[activeIndex].items.append(ChecklistItem(text: text))
         draft = ""
+    }
+
+    private func persist() { storage.save(notes) }
+}
+
+struct NoteStorage {
+    private var fileURL: URL {
+        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Cyndi", isDirectory: true)
+        try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        return base.appendingPathComponent("notes.json")
+    }
+
+    func load() -> [Note] {
+        guard let data = try? Data(contentsOf: fileURL),
+              let notes = try? JSONDecoder().decode([Note].self, from: data) else { return [] }
+        return notes
+    }
+
+    func save(_ notes: [Note]) {
+        guard let data = try? JSONEncoder().encode(notes) else { return }
+        try? data.write(to: fileURL, options: .atomic)
     }
 }
 
