@@ -26,28 +26,35 @@ struct EditorView: View {
     var bandHeight: CGFloat
     var onDelete: () -> Void = {}
     @FocusState private var fieldFocused: Bool
+    @FocusState private var titleFocused: Bool
 
     private var note: Note { store.activeNote ?? Note(title: "", color: .printYellow, items: []) }
 
-    private let sideMargin: CGFloat = 12
+    private var titleBinding: Binding<String> {
+        Binding(
+            get: { store.activeNote?.title ?? "" },
+            set: { store.setTitle($0, noteID: note.id) }
+        )
+    }
 
     var body: some View {
-        Group {
+        VStack(spacing: 0) {
+            Ink.panelBlack.frame(width: 420, height: bandHeight)
             if store.activeNote != nil {
                 panel
-            } else {
-                Color.clear.frame(width: 420, height: 1)
             }
         }
-        .frame(width: 420 + sideMargin * 2, alignment: .center)
-        .padding(.top, bandHeight)
-        .background(
-            Ink.panelBlack.clipShape(NotchPanelShape(ear: sideMargin, bottom: 20))
-        )
-        .fixedSize()
+        .clipShape(editorShape)
         .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
         .onAppear { fieldFocused = true }
         .onChange(of: store.activeNoteID) { fieldFocused = true }
+    }
+
+    private var editorShape: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: 0, bottomLeadingRadius: 20,
+            bottomTrailingRadius: 20, topTrailingRadius: 0,
+            style: .continuous)
     }
 
     private var panel: some View {
@@ -63,15 +70,27 @@ struct EditorView: View {
         }
         .padding(EdgeInsets(top: 18, leading: 20, bottom: 15, trailing: 20))
         .frame(width: 420, alignment: .leading)
+        .background(Ink.panelBlack, in: editorShape)
     }
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline, spacing: 12) {
             FillingDot(color: note.color.color, completion: note.completion, diameter: 11)
                 .alignmentGuide(.firstTextBaseline) { $0.height - 2 }
-            Text(note.title)
-                .font(Fonts.caveat(28))
-                .foregroundStyle(Ink.primary)
+            ZStack(alignment: .leading) {
+                if (store.activeNote?.title ?? "").isEmpty {
+                    Text("untitled")
+                        .font(Fonts.caveat(28))
+                        .foregroundStyle(Ink.white(0.30))
+                }
+                TextField("", text: titleBinding)
+                    .textFieldStyle(.plain)
+                    .font(Fonts.caveat(28))
+                    .foregroundStyle(Ink.primary)
+                    .focused($titleFocused)
+                    .onSubmit { titleFocused = false; fieldFocused = true }
+            }
+            .fixedSize(horizontal: false, vertical: true)
             Spacer()
             Text("\(note.doneCount)/\(note.items.count)")
                 .font(Fonts.kalam(12))

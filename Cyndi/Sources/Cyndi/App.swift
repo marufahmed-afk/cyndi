@@ -43,6 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self, selector: #selector(screensChanged),
             name: NSApplication.didChangeScreenParametersNotification, object: nil)
 
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self, selector: #selector(otherAppActivated),
+            name: NSWorkspace.didActivateApplicationNotification, object: nil)
+
         storeObserver = store.objectWillChange
             .receive(on: RunLoop.main)
             .sink { [weak self] in
@@ -173,15 +177,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func positionEditor() {
         guard let screen = NSScreen.screenWithMouse else { return }
-        let fit = editorHosting?.fittingSize ?? .zero
-        let panelW = max(fit.width, 1)
-        let totalH = max(fit.height, 1)
+        let panelW: CGFloat = 420
+        let totalH = max(editorHosting?.fittingSize.height ?? 0, 1)
         let top = screen.frame.maxY
         let ex = screen.frame.midX - panelW / 2
         editorPanel.setFrame(NSRect(x: ex, y: top - totalH, width: panelW, height: totalH), display: true)
     }
 
     @objc private func screensChanged() { layout() }
+
+    @objc private func otherAppActivated(_ note: Notification) {
+        guard store.isOpen else { return }
+        let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+        if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {
+            close()
+        }
+    }
 
     @objc private func toggle() {
         store.isOpen ? close() : open()
@@ -201,10 +212,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func close() {
+        dimWindow?.orderOut(nil)
+        editorPanel.orderOut(nil)
         store.isOpen = false
         store.draft = ""
-        editorPanel.orderOut(nil)
-        dimWindow?.orderOut(nil)
     }
 
     private func tapDot(_ id: UUID) {

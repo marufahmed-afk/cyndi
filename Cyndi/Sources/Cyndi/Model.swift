@@ -92,6 +92,11 @@ final class Store: ObservableObject {
         return true
     }
 
+    func setTitle(_ title: String, noteID: UUID) {
+        guard let n = notes.firstIndex(where: { $0.id == noteID }) else { return }
+        notes[n].title = title
+    }
+
     func toggleItem(noteID: UUID, itemID: UUID) {
         guard let n = notes.firstIndex(where: { $0.id == noteID }),
               let i = notes[n].items.firstIndex(where: { $0.id == itemID }) else { return }
