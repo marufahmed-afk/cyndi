@@ -45,13 +45,19 @@ final class Store: ObservableObject {
     @Published var activeNoteID: UUID
     @Published var isOpen: Bool = false
     @Published var draft: String = ""
+    @Published var showDots: Bool {
+        didSet { UserDefaults.standard.set(showDots, forKey: Self.showDotsKey) }
+    }
 
     private let storage = NoteStorage()
+    private static let showDotsKey = "showDots"
 
     init() {
         let loaded = storage.load()
         notes = loaded
         activeNoteID = loaded.first?.id ?? UUID()
+        let defaults = UserDefaults.standard
+        showDots = defaults.object(forKey: Self.showDotsKey) as? Bool ?? true
     }
 
     var activeIndex: Int { notes.firstIndex { $0.id == activeNoteID } ?? 0 }
