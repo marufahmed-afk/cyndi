@@ -126,5 +126,6 @@ extension Color {
 enum Ink {
     static let panelBlack = Color(hex: 0x05080A)
     static let primary = Color(hex: 0xF3F2F2)
+    static let dimColor = Color(hex: 0x06090B, alpha: 0.68)
     static func white(_ a: Double) -> Color { Color(hex: 0xF3F2F2, alpha: a) }
 }

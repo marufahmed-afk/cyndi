@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import Combine
 import Carbon.HIToolbox
 
 @main
@@ -17,21 +16,16 @@ struct CyndiMain {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = Store()
-    private var dotsPanel: NotchPanel!
-    private var editorPanel: NotchPanel!
-    private var editorHosting: NSHostingView<EditorView>?
-    private var dimWindow: NSWindow!
+    private var panel: NotchPanel!
+    private var hosting: NSHostingView<RootOverlayView>?
     private var statusItem: NSStatusItem!
     private var hotkey: Hotkey?
     private var keyMonitor: Any?
-    private var storeObserver: AnyCancellable?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Fonts.register()
         setupStatusItem()
-        setupDim()
-        setupDotsPanel()
-        setupEditorPanel()
+        setupPanel()
         layout()
 
         hotkey = Hotkey(keyCode: UInt32(kVK_Space),
@@ -47,14 +41,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self, selector: #selector(otherAppActivated),
             name: NSWorkspace.didActivateApplicationNotification, object: nil)
 
-        storeObserver = store.objectWillChange
-            .receive(on: RunLoop.main)
-            .sink { [weak self] in
-                guard let self, self.store.isOpen else { return }
-                self.editorHosting?.layoutSubtreeIfNeeded()
-                self.positionEditor()
-            }
-
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
             let cmd = event.modifierFlags.contains(.command)
@@ -67,12 +53,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             if cmd {
                 switch event.keyCode {
-                case UInt16(kVK_ANSI_1): self.store.selectIndex(0); self.editorPanel.makeKey(); return nil
-                case UInt16(kVK_ANSI_2): self.store.selectIndex(1); self.editorPanel.makeKey(); return nil
-                case UInt16(kVK_ANSI_3): self.store.selectIndex(2); self.editorPanel.makeKey(); return nil
-                case UInt16(kVK_ANSI_4): self.store.selectIndex(3); self.editorPanel.makeKey(); return nil
-                case UInt16(kVK_ANSI_5): self.store.selectIndex(4); self.editorPanel.makeKey(); return nil
-                case UInt16(kVK_ANSI_6): self.store.selectIndex(5); self.editorPanel.makeKey(); return nil
+                case UInt16(kVK_ANSI_1): self.store.selectIndex(0); self.panel.makeKey(); return nil
+                case UInt16(kVK_ANSI_2): self.store.selectIndex(1); self.panel.makeKey(); return nil
+                case UInt16(kVK_ANSI_3): self.store.selectIndex(2); self.panel.makeKey(); return nil
+                case UInt16(kVK_ANSI_4): self.store.selectIndex(3); self.panel.makeKey(); return nil
+                case UInt16(kVK_ANSI_5): self.store.selectIndex(4); self.panel.makeKey(); return nil
+                case UInt16(kVK_ANSI_6): self.store.selectIndex(5); self.panel.makeKey(); return nil
                 case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
                     self.deleteChecklist(); return nil
                 default: return event
@@ -91,7 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        dotsPanel.present()
+        panel.present()
     }
 
     private func newChecklist() {
@@ -99,14 +85,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if !store.isOpen {
             open()
         } else {
-            editorPanel.makeKey()
+            panel.makeKey()
         }
     }
 
     private func deleteChecklist() {
         let hasRemaining = store.deleteActiveNote()
         if hasRemaining {
-            editorPanel.makeKey()
+            panel.makeKey()
         } else {
             close()
         }
@@ -117,7 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard count > 0 else { return }
         let next = (store.activeIndex + delta + count) % count
         store.select(store.notes[next].id)
-        editorPanel.makeKey()
+        panel.makeKey()
     }
 
     private func setupStatusItem() {
@@ -132,59 +118,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = menu
     }
 
-    private func setupDotsPanel() {
-        dotsPanel = NotchPanel(keyCapable: false)
-        let root = DotsView(store: store) { [weak self] id in self?.tapDot(id) }
+    private func setupPanel() {
+        panel = NotchPanel(keyCapable: true)
+        let band = NSScreen.screenWithMouse?.notchRect.height ?? 30
+        let root = RootOverlayView(
+            store: store,
+            bandHeight: band,
+            onTapDot: { [weak self] id in self?.tapDot(id) },
+            onDelete: { [weak self] in self?.deleteChecklist() },
+            onDimClick: { [weak self] in self?.close() })
         let hosting = NSHostingView(rootView: root)
         hosting.wantsLayer = true
-        dotsPanel.contentView = hosting
-    }
-
-    private func setupEditorPanel() {
-        editorPanel = NotchPanel(keyCapable: true)
-        let band = NSScreen.screenWithMouse?.notchRect.height ?? 30
-        let hosting = NSHostingView(rootView: EditorView(store: store, bandHeight: band, onDelete: { [weak self] in self?.deleteChecklist() }))
-        hosting.sizingOptions = [.intrinsicContentSize]
-        hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
-        editorHosting = hosting
-        editorPanel.contentView = hosting
-    }
-
-    private func setupDim() {
-        guard let screen = NSScreen.screenWithMouse else { return }
-        dimWindow = NSWindow(contentRect: screen.frame, styleMask: .borderless,
-                             backing: .buffered, defer: false)
-        dimWindow.isOpaque = false
-        dimWindow.backgroundColor = NSColor(red: 6/255, green: 9/255, blue: 11/255, alpha: 0.68)
-        dimWindow.level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.mainMenuWindow)) - 1)
-        dimWindow.collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary, .ignoresCycle]
-        dimWindow.ignoresMouseEvents = false
-        dimWindow.isReleasedWhenClosed = false
-        let click = NSClickGestureRecognizer(target: self, action: #selector(dimClicked))
-        dimWindow.contentView?.addGestureRecognizer(click)
+        self.hosting = hosting
+        panel.contentView = hosting
     }
 
     private func layout() {
-        guard let screen = NSScreen.screenWithMouse else { return }
-        let band = screen.notchRect.height
-        let dotsFrame = NSRect(x: screen.frame.minX, y: screen.frame.maxY - band,
-                               width: screen.frame.width, height: band)
-        dotsPanel.setFrame(dotsFrame, display: true)
-
-        editorHosting?.rootView = EditorView(store: store, bandHeight: band, onDelete: { [weak self] in self?.deleteChecklist() })
-        positionEditor()
-        dimWindow?.setFrame(screen.frame, display: false)
+        let band = NSScreen.screenWithMouse?.notchRect.height ?? 30
+        hosting?.rootView = RootOverlayView(
+            store: store,
+            bandHeight: band,
+            onTapDot: { [weak self] id in self?.tapDot(id) },
+            onDelete: { [weak self] in self?.deleteChecklist() },
+            onDimClick: { [weak self] in self?.close() })
+        applyFrame()
     }
 
-    private func positionEditor() {
+    private func applyFrame() {
         guard let screen = NSScreen.screenWithMouse else { return }
-        let bleed = EditorView.shadowBleed
-        let panelW = EditorView.panelWidth + bleed.leading + bleed.trailing
-        let totalH = max(editorHosting?.fittingSize.height ?? 0, 1)
-        let top = screen.frame.maxY + bleed.top
-        let ex = screen.frame.midX - panelW / 2
-        editorPanel.setFrame(NSRect(x: ex, y: top - totalH, width: panelW, height: totalH), display: true)
+        if store.isOpen {
+            panel.setFrame(screen.frame, display: true)
+        } else {
+            let band = screen.notchRect.height
+            let bandFrame = NSRect(x: screen.frame.minX, y: screen.frame.maxY - band,
+                                   width: screen.frame.width, height: band)
+            panel.setFrame(bandFrame, display: true)
+        }
     }
 
     @objc private func screensChanged() { layout() }
@@ -206,19 +176,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             store.newNote()
         }
         store.isOpen = true
-        editorHosting?.layoutSubtreeIfNeeded()
-        positionEditor()
-        dimWindow?.orderFrontRegardless()
-        editorPanel.present()
-        editorPanel.makeKey()
-        dotsPanel.orderFrontRegardless()
+        applyFrame()
+        panel.present()
+        panel.makeKey()
     }
 
     private func close() {
-        dimWindow?.orderOut(nil)
-        editorPanel.orderOut(nil)
         store.isOpen = false
         store.draft = ""
+        applyFrame()
+        panel.resignKey()
     }
 
     private func tapDot(_ id: UUID) {
@@ -226,9 +193,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             close()
         } else {
             store.select(id)
-            if !store.isOpen { open() } else { editorPanel.makeKey() }
+            if !store.isOpen { open() } else { panel.makeKey() }
         }
     }
-
-    @objc private func dimClicked() { close() }
 }
