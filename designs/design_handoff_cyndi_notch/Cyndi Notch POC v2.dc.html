@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/broadsheet-a5f7142c-fe88-4799-ad8e-dc671e75b2e4/styles.css">
+<script src="_ds/broadsheet-a5f7142c-fe88-4799-ad8e-dc671e75b2e4/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Kalam:wght@300;400;700&display=swap">
+<style>
+  body { margin: 0; background: var(--color-bg); color: var(--color-text); font-family: var(--font-body); }
+  a { color: var(--color-accent-700); text-decoration: none; }
+  a:hover { color: var(--color-accent-2); }
+  @keyframes cyndiCaret { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
+  @keyframes cyndiPop { from { transform: translateY(-6px) scale(.96); opacity: 0 } to { transform: none; opacity: 1 } }
+</style>
+</helmet>
+
+<div style="padding: 40px 48px 64px; max-width: 1420px; margin: 0 auto">
+
+  <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px">
+    <div style="font-family: var(--font-body); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-accent-2)">Draft two · dots are the switcher</div>
+    <h1 style="font-family: var(--font-heading); font-size: 52px; font-weight: 600; line-height: 1.02; margin: 0; letter-spacing: -.01em">Cyndi, all black</h1>
+    <p style="max-width: 48ch; font-size: 17px; line-height: 1.5; color: var(--color-neutral-700); margin: 8px 0 0; text-wrap: pretty">The panel is the same black as the notch, so it reads as the notch growing downward. No tabs inside — the dot row stays lit while you're open and the selected dot tells you which note you're in. Click another dot, or arrow left and right, to switch without leaving focus mode.</p>
+  </div>
+
+  <div style="display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; margin-top: 32px">
+
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <div style="position: relative; width: 1120px; height: 700px; overflow: hidden; border-radius: 12px; box-shadow: var(--shadow-lg); background: #16262c; background-image: radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.2px); background-size: 7px 7px" onClick="{{ onDesktopClick }}">
+
+        <div style="position: absolute; inset: 0; display: flex; align-items: flex-end; padding: 44px; font-family: var(--font-heading); font-size: 15px; color: rgba(255,255,255,.28); letter-spacing: .12em; text-transform: uppercase">Desktop</div>
+
+        <sc-if value="{{ isFullscreen }}" hint-placeholder-val="{{ false }}">
+          <div style="position: absolute; inset: 0; background: #0f1417; display: flex; flex-direction: column">
+            <div style="height: 46px"></div>
+            <div style="flex: 1; padding: 0 64px 64px; display: flex; flex-direction: column; gap: 22px; justify-content: center">
+              <div style="font-family: var(--font-heading); color: rgba(255,255,255,.5); font-size: 14px; letter-spacing: .16em; text-transform: uppercase">Another app · native fullscreen</div>
+              <div style="display: flex; flex-direction: column; gap: 12px; max-width: 620px">
+                <div style="height: 14px; width: 78%; background: rgba(255,255,255,.09); border-radius: 2px"></div>
+                <div style="height: 14px; width: 62%; background: rgba(255,255,255,.07); border-radius: 2px"></div>
+                <div style="height: 14px; width: 70%; background: rgba(255,255,255,.05); border-radius: 2px"></div>
+              </div>
+            </div>
+          </div>
+          <div style="position: absolute; top: 0; left: 0; right: 0; height: 16px; z-index: 6" onMouseEnter="{{ onRevealEnter }}" onMouseLeave="{{ onRevealLeave }}"></div>
+          <div style="position: absolute; right: 26px; bottom: 26px; width: 296px; padding: 16px 18px; background: #05080a; color: #f3f2f2; border: 1.6px solid rgba(243,242,242,.22); border-radius: 16px 9px 18px 10px / 9px 17px 10px 16px; box-shadow: 0 10px 26px rgba(0,0,0,.5); z-index: 7">
+            <div style="font-family: Caveat, cursive; font-size: 22px; color: #f2c200; margin-bottom: 4px">Dots are hidden here</div>
+            <div style="font-family: Kalam, cursive; font-size: 14px; line-height: 1.5; color: rgba(243,242,242,.72)">Over another app's native fullscreen, sandbox-safe windows can't sit on the notch. Nudge the cursor to the top edge to reveal them — or just press ⌘⇧Space.</div>
+          </div>
+        </sc-if>
+
+        <div style="position: absolute; inset: 0; background: rgba(6,9,11,.68); backdrop-filter: blur(1.5px); z-index: 8; transition: opacity .18s ease; opacity: {{ dimOpacity }}; pointer-events: {{ dimEvents }}"></div>
+
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 30px; background: rgba(14,20,23,.72); backdrop-filter: blur(8px); z-index: 9; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-family: var(--font-body); font-size: 12px; color: rgba(255,255,255,.62); transition: transform .2s ease, opacity .2s ease; transform: {{ menuBarTransform }}; opacity: {{ menuBarOpacity }}">
+          <div style="display: flex; gap: 18px; align-items: center">
+            <span style="font-weight: 600; color: rgba(255,255,255,.85)">Finder</span>
+            <span>File</span><span>Edit</span><span>View</span>
+          </div>
+          <div style="display: flex; gap: 16px; align-items: center">
+            <span style="opacity: .85">●●●</span>
+            <span>Thu 24 Jul</span>
+            <span>11:42</span>
+          </div>
+        </div>
+
+        <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 196px; height: 30px; background: #05080a; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 11"></div>
+
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 30px; z-index: 13; transition: opacity .18s ease; opacity: {{ dotsOpacity }}; pointer-events: {{ dotsEvents }}">
+
+          <div style="position: absolute; top: 0; right: calc(50% + 110px); height: 30px; display: flex; align-items: center; justify-content: flex-end; gap: 10px">
+            <sc-for list="{{ leftDots }}" as="dot" hint-placeholder-count="3">
+              <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 20px; height: 30px; cursor: pointer; transition: transform .16s cubic-bezier(.2,.9,.3,1.2), opacity .18s ease, filter .18s ease; transform: {{ dot.lift }}; opacity: {{ dot.opacity }}; filter: {{ dot.filter }}" onMouseEnter="{{ dot.onEnter }}" onMouseLeave="{{ dot.onLeave }}" onClick="{{ dot.onClick }}">
+                <div style="border-radius: 50%; border: 1.4px solid {{ dot.stroke }}; transition: background .18s ease, box-shadow .18s ease; width: {{ dotSize }}; height: {{ dotSize }}; background: {{ dot.fill }}; box-shadow: {{ dot.glow }}"></div>
+                <div style="position: absolute; inset: 50% auto auto 50%; border-radius: 50%; width: {{ haloSize }}; height: {{ haloSize }}; margin: {{ haloOffset }}; border: 1.3px solid {{ dot.haloColor }}; transition: opacity .18s ease, transform .18s ease; opacity: {{ dot.haloOpacity }}; transform: {{ dot.haloScale }}; pointer-events: none"></div>
+                <svg viewBox="0 0 20 8" style="position: absolute; bottom: 0; left: 50%; width: 18px; margin-left: -9px; overflow: visible; transition: opacity .16s ease; opacity: {{ dot.crownOpacity }}; pointer-events: none"><path d="M1.5 6.4 C6 6.9 13.5 6.6 18.4 6.1" fill="none" stroke="{{ dot.color }}" stroke-width="2" stroke-linecap="round"></path></svg>
+                <sc-if value="{{ dot.showPreview }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); min-width: 130px; padding: 8px 11px 9px; background: #05080a; border: 1.4px solid rgba(243,242,242,.22); border-radius: 12px 8px 14px 9px / 8px 13px 9px 12px; box-shadow: 0 8px 22px rgba(0,0,0,.55); animation: cyndiPop .14s ease-out; pointer-events: none; z-index: 4">
+                    <div style="font-family: Caveat, cursive; font-size: 19px; line-height: 1.1; color: #f3f2f2; white-space: nowrap">{{ dot.title }}</div>
+                    <div style="font-family: Kalam, cursive; font-size: 12px; margin-top: 2px; white-space: nowrap; color: {{ dot.color }}">{{ dot.progressLabel }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="position: absolute; top: 0; left: calc(50% + 110px); height: 30px; display: flex; align-items: center; gap: 10px">
+            <sc-for list="{{ rightDots }}" as="dot" hint-placeholder-count="3">
+              <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 20px; height: 30px; cursor: pointer; transition: transform .16s cubic-bezier(.2,.9,.3,1.2), opacity .18s ease, filter .18s ease; transform: {{ dot.lift }}; opacity: {{ dot.opacity }}; filter: {{ dot.filter }}" onMouseEnter="{{ dot.onEnter }}" onMouseLeave="{{ dot.onLeave }}" onClick="{{ dot.onClick }}">
+                <div style="border-radius: 50%; border: 1.4px solid {{ dot.stroke }}; transition: background .18s ease, box-shadow .18s ease; width: {{ dotSize }}; height: {{ dotSize }}; background: {{ dot.fill }}; box-shadow: {{ dot.glow }}"></div>
+                <div style="position: absolute; inset: 50% auto auto 50%; border-radius: 50%; width: {{ haloSize }}; height: {{ haloSize }}; margin: {{ haloOffset }}; border: 1.3px solid {{ dot.haloColor }}; transition: opacity .18s ease, transform .18s ease; opacity: {{ dot.haloOpacity }}; transform: {{ dot.haloScale }}; pointer-events: none"></div>
+                <svg viewBox="0 0 20 8" style="position: absolute; bottom: 0; left: 50%; width: 18px; margin-left: -9px; overflow: visible; transition: opacity .16s ease; opacity: {{ dot.crownOpacity }}; pointer-events: none"><path d="M1.5 6.4 C6 6.9 13.5 6.6 18.4 6.1" fill="none" stroke="{{ dot.color }}" stroke-width="2" stroke-linecap="round"></path></svg>
+                <sc-if value="{{ dot.showPreview }}" hint-placeholder-val="{{ false }}">
+                  <div style="position: absolute; top: 30px; left: 50%; transform: translateX(-50%); min-width: 130px; padding: 8px 11px 9px; background: #05080a; border: 1.4px solid rgba(243,242,242,.22); border-radius: 12px 8px 14px 9px / 8px 13px 9px 12px; box-shadow: 0 8px 22px rgba(0,0,0,.55); animation: cyndiPop .14s ease-out; pointer-events: none; z-index: 4">
+                    <div style="font-family: Caveat, cursive; font-size: 19px; line-height: 1.1; color: #f3f2f2; white-space: nowrap">{{ dot.title }}</div>
+                    <div style="font-family: Kalam, cursive; font-size: 12px; margin-top: 2px; white-space: nowrap; color: {{ dot.color }}">{{ dot.progressLabel }}</div>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-for>
+            <div style="position: relative; display: flex; align-items: center" onMouseEnter="{{ onOverflowEnter }}" onMouseLeave="{{ onOverflowLeave }}">
+              <div style="height: 15px; padding: 0 6px; display: grid; place-items: center; border-radius: 8px 6px 9px 6px / 6px 9px 6px 8px; border: 1.3px dashed rgba(243,242,242,.45); font-family: Kalam, cursive; font-size: 11px; line-height: 1; color: rgba(243,242,242,.7); cursor: pointer">{{ overflowLabel }}</div>
+              <sc-if value="{{ overflowHovered }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; top: 30px; right: 0; width: 186px; padding: 10px 12px; background: #05080a; border: 1.4px solid rgba(243,242,242,.22); border-radius: 12px 8px 14px 9px / 8px 13px 9px 12px; box-shadow: 0 8px 22px rgba(0,0,0,.55); animation: cyndiPop .14s ease-out; display: flex; flex-direction: column; gap: 8px; z-index: 4">
+                  <sc-for list="{{ overflowDots }}" as="o" hint-placeholder-count="2">
+                    <div style="display: flex; align-items: center; gap: 9px; cursor: pointer" onClick="{{ o.onClick }}">
+                      <div style="width: 11px; height: 11px; flex: none; border-radius: 50%; border: 1.3px solid {{ o.color }}; background: {{ o.fill }}"></div>
+                      <div style="font-family: Kalam, cursive; font-size: 13px; color: rgba(243,242,242,.86); white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ o.title }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+
+        <div style="position: absolute; top: 30px; left: 50%; z-index: 12; width: {{ panelWidth }}; margin-left: {{ panelOffset }}; transition: opacity .16s ease, transform .18s cubic-bezier(.2,.9,.3,1.2); opacity: {{ panelOpacity }}; transform: {{ panelTransform }}; pointer-events: {{ panelEvents }}" onClick="{{ stop }}">
+          <div style="background: #05080a; color: #f3f2f2; border-radius: 0 0 20px 20px; box-shadow: 0 26px 50px rgba(0,0,0,.6), inset 0 0 0 1px rgba(243,242,242,.08); padding: 18px 20px 15px; position: relative">
+
+            <div style="position: absolute; top: 0; left: 50%; width: 196px; height: 4px; margin-left: -98px; background: #05080a"></div>
+
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px">
+              <div style="display: flex; align-items: center; gap: 10px">
+                <div style="width: 11px; height: 11px; flex: none; border-radius: 50%; border: 1.4px solid {{ activeColor }}; background: {{ activeFill }}"></div>
+                <div style="font-family: Caveat, cursive; font-size: 28px; line-height: 1; letter-spacing: .01em">{{ activeTitle }}</div>
+              </div>
+              <div style="font-family: Kalam, cursive; font-size: 12px; color: rgba(243,242,242,.45)">{{ activeProgress }}</div>
+            </div>
+
+            <div style="font-family: Kalam, cursive; font-size: 11.5px; color: rgba(243,242,242,.3); margin-bottom: 8px">{{ positionLabel }}</div>
+
+            <div style="display: flex; flex-direction: column; gap: 2px">
+              <sc-for list="{{ items }}" as="it" hint-placeholder-count="3">
+                <div style="display: flex; align-items: center; gap: 11px; height: 34px; cursor: pointer" onClick="{{ it.onToggle }}">
+                  <div style="width: 17px; height: 17px; flex: none; display: grid; place-items: center; border: 1.5px solid {{ it.boxBorder }}; border-radius: 6px 4px 7px 4px / 4px 7px 4px 6px; background: {{ it.boxBg }}; transform: {{ it.boxTilt }}">
+                    <sc-if value="{{ it.done }}" hint-placeholder-val="{{ false }}">
+                      <svg viewBox="0 0 16 16" style="width: 15px; height: 15px; overflow: visible"><path d="M2.6 8.9 C4.2 10.2 5.1 11.6 6.2 13.4 C8.1 8.9 10.4 5.2 14 1.9" fill="none" stroke="{{ activeColor }}" stroke-width="2.1" stroke-linecap="round"></path></svg>
+                    </sc-if>
+                  </div>
+                  <div style="font-family: Kalam, cursive; font-size: 17px; line-height: 1.2; color: {{ it.ink }}; text-decoration: {{ it.strike }}; text-decoration-thickness: 1.5px">{{ it.text }}</div>
+                </div>
+              </sc-for>
+
+              <div style="display: flex; align-items: center; gap: 11px; height: 34px">
+                <div style="width: 17px; height: 17px; flex: none; border: 1.5px dashed rgba(243,242,242,.28); border-radius: 6px 4px 7px 4px / 4px 7px 4px 6px; transform: rotate(-1.4deg)"></div>
+                <div style="position: relative; flex: 1; display: flex; align-items: center">
+                  <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" ref="{{ inputRef }}" placeholder="start typing…" style="width: 100%; background: transparent; border: none; outline: none; font-family: Kalam, cursive; font-size: 17px; line-height: 1.2; color: #f3f2f2; padding: 0" />
+                  <div style="position: absolute; left: {{ caretLeft }}; width: 1.6px; height: 20px; background: {{ activeColor }}; animation: cyndiCaret 1.05s step-end infinite; pointer-events: none"></div>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 13px; height: 7px; border: 1.3px solid rgba(243,242,242,.24); border-radius: 6px 4px 7px 4px / 4px 7px 4px 6px; overflow: hidden">
+              <div style="height: 100%; transition: width .18s ease; width: {{ barWidth }}; background: {{ activeColor }}"></div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-family: Kalam, cursive; font-size: 11.5px; color: rgba(243,242,242,.4)">
+              <div>↵ new item · ← → switch note</div>
+              <div>⌘⇧Space to close · saved locally</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-size: 14px; color: var(--color-neutral-700)">
+        <span>Try it:</span>
+        <span style="padding: 2px 8px; border: 1px solid var(--color-neutral-400); border-radius: var(--radius-sm)">⌘⇧Space</span>
+        <span style="padding: 2px 8px; border: 1px solid var(--color-neutral-400); border-radius: var(--radius-sm)">← →</span>
+        <span style="padding: 2px 8px; border: 1px solid var(--color-neutral-400); border-radius: var(--radius-sm)">Esc</span>
+        <span>· dots stay live while open — click one to switch notes</span>
+      </div>
+    </div>
+
+    <div style="width: 244px; display: flex; flex-direction: column; gap: 28px">
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="font-family: var(--font-body); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-accent-700)">Selected-dot effect</div>
+        <sc-for list="{{ selOptions }}" as="o" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; cursor: pointer; border-radius: var(--radius-md); border: 1px solid {{ o.border }}; background: {{ o.bg }}" onClick="{{ o.onClick }}">
+            <div style="font-family: var(--font-heading); font-size: 17px; font-weight: 600">{{ o.title }}</div>
+            <div style="font-size: 13.5px; line-height: 1.4; color: var(--color-neutral-700)">{{ o.note }}</div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        <div style="font-family: var(--font-body); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-neutral-600)">Accepted trade-off</div>
+        <div style="display: flex; flex-direction: column; gap: 3px; padding: 10px 12px; cursor: pointer; border-radius: var(--radius-md); border: 1px solid {{ fsBorder }}; background: {{ fsBg }}" onClick="{{ onToggleFullscreen }}">
+          <div style="font-family: var(--font-heading); font-size: 17px; font-weight: 600">{{ fsLabel }}</div>
+          <div style="font-size: 13.5px; line-height: 1.4; color: var(--color-neutral-700)">Dots hide over native fullscreen. Cursor to the top edge reveals them; the shortcut always works.</div>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="font-family: var(--font-body); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--color-neutral-600)">Draft one</div>
+        <div style="font-size: 13.5px; line-height: 1.45; color: var(--color-neutral-700)">The first take — grey panel, in-panel tabs, three dot languages — is kept intact at <a href="Cyndi Notch POC.dc.html">Cyndi Notch POC</a>.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;: {&quot;width&quot;: 1420, &quot;height&quot;: 900}, &quot;selectedEffect&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;bright&quot;, &quot;halo&quot;, &quot;crown&quot;, &quot;lift&quot;], &quot;default&quot;: &quot;bright&quot;, &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Dots&quot;}, &quot;showHoverPreview&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: false, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Dots&quot;}, &quot;unselectedDim&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 0.4, &quot;min&quot;: 0.15, &quot;max&quot;: 1, &quot;step&quot;: 0.05, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Dots&quot;}, &quot;dotSize&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 13, &quot;min&quot;: 9, &quot;max&quot;: 20, &quot;unit&quot;: &quot;px&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Dots&quot;}, &quot;panelWidth&quot;: {&quot;editor&quot;: &quot;int&quot;, &quot;default&quot;: 420, &quot;min&quot;: 340, &quot;max&quot;: 560, &quot;unit&quot;: &quot;px&quot;, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Panel&quot;}}">
+const CYAN = '#0088b0', MAGENTA = '#d6006c', YELLOW = '#f2c200', GREEN = '#4f9d69', VIOLET = '#7b5ea7';
+
+const SEED = [
+  { id: 'n1', title: 'Today', color: YELLOW, items: [
+    { text: 'Do shopping', done: false },
+    { text: 'Get car keys', done: false },
+    { text: 'Workout', done: false } ] },
+  { id: 'n2', title: 'Groceries', color: CYAN, items: [
+    { text: 'Oat milk', done: true }, { text: 'Coffee beans', done: true },
+    { text: 'Tomatoes', done: false }, { text: 'Bread', done: false } ] },
+  { id: 'n3', title: 'Ship v0.2', color: MAGENTA, items: [
+    { text: 'Lock persistence', done: true }, { text: 'Dot overflow rule', done: false },
+    { text: 'Multi-monitor policy', done: false } ] },
+  { id: 'n4', title: 'Call Mom', color: GREEN, items: [ { text: 'Sunday, after 6', done: false } ] },
+  { id: 'n5', title: 'Read later', color: VIOLET, items: [
+    { text: 'Sandbox entitlements', done: true }, { text: 'NSStatusItem docs', done: true },
+    { text: 'Notch geometry notes', done: true } ] },
+  { id: 'n6', title: 'Trip packing', color: CYAN, items: [
+    { text: 'Charger', done: true }, { text: 'Passport', done: false } ] },
+  { id: 'n7', title: 'Bugs', color: MAGENTA, items: [
+    { text: 'Dot drifts on wake', done: false }, { text: 'Caret loses focus', done: false } ] },
+  { id: 'n8', title: 'Ideas', color: YELLOW, items: [ { text: 'Dot as timer ring', done: false } ] }
+];
+
+class Component extends DCLogic {
+  state = {
+    notes: SEED, open: false, activeId: 'n1', hoverId: null, overflowHover: false,
+    draft: '', selEffect: null, fullscreen: false, revealed: false
+  };
+
+  inputRef = React.createRef();
+
+  componentDidMount() {
+    this.onKey = (e) => {
+      if (e.metaKey && e.shiftKey && (e.code === 'Space' || e.key === ' ')) {
+        e.preventDefault(); this.setState(s => ({ open: !s.open }));
+      } else if (e.key === 'Escape' && this.state.open) {
+        this.setState({ open: false, draft: '' });
+      } else if (this.state.open && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+        if (this.state.draft) return;
+        e.preventDefault(); this.step(e.key === 'ArrowRight' ? 1 : -1);
+      }
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(_p, prev) {
+    if (this.state.open && !prev.open && this.inputRef.current) this.inputRef.current.focus();
+  }
+
+  pct(n) { return n.items.length ? n.items.filter(i => i.done).length / n.items.length : 0; }
+
+  step(d) {
+    const ns = this.state.notes;
+    const i = ns.findIndex(n => n.id === this.state.activeId);
+    const next = ns[(i + d + ns.length) % ns.length];
+    this.setState({ activeId: next.id, draft: '' });
+    if (this.inputRef.current) this.inputRef.current.focus();
+  }
+
+  select(id) {
+    this.setState({ open: true, activeId: id, draft: '', hoverId: null, overflowHover: false });
+    window.setTimeout(() => { if (this.inputRef.current) this.inputRef.current.focus(); }, 0);
+  }
+
+  toggleItem(nid, idx) {
+    this.setState(s => ({
+      notes: s.notes.map(n => n.id !== nid ? n : Object.assign({}, n, {
+        items: n.items.map((it, i) => i !== idx ? it : Object.assign({}, it, { done: !it.done })) }))
+    }));
+  }
+
+  addItem() {
+    const text = this.state.draft.trim();
+    if (!text) return;
+    this.setState(s => ({
+      draft: '',
+      notes: s.notes.map(n => n.id !== s.activeId ? n : Object.assign({}, n, { items: n.items.concat([{ text: text, done: false }]) }))
+    }));
+  }
+
+  fillFor(n) {
+    const p = this.pct(n) * 100;
+    return 'linear-gradient(to top, ' + n.color + ' ' + p + '%, rgba(243,242,242,.09) ' + p + '%)';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const notes = s.notes;
+    const active = notes.find(n => n.id === s.activeId) || notes[0];
+    const visible = notes.slice(0, 6);
+    const hidden = notes.slice(6);
+    const dotsHidden = s.fullscreen && !s.revealed;
+    const eff = s.selEffect || this.props.selectedEffect || 'bright';
+    const showPreview = this.props.showHoverPreview ?? false;
+    const dim = this.props.unselectedDim ?? 0.4;
+    const size = this.props.dotSize ?? 13;
+    const width = this.props.panelWidth ?? 420;
+
+    const mkDot = (n) => {
+      const on = n.id === s.activeId && s.open;
+      const done = n.items.filter(i => i.done).length;
+      return {
+        title: n.title, color: n.color,
+        showPreview: showPreview && s.hoverId === n.id,
+        progressLabel: done + ' of ' + n.items.length + ' done',
+        fill: this.fillFor(n),
+        stroke: on || !s.open ? n.color : 'rgba(243,242,242,.35)',
+        opacity: s.open && !on ? dim : 1,
+        filter: on && eff === 'bright' ? 'brightness(1.4) saturate(1.2)' : 'none',
+        lift: on && eff === 'lift' ? 'translateY(1px) scale(1.35)' : (s.open && !on && eff !== 'bright' ? 'scale(.86)' : 'none'),
+        glow: on && eff === 'lift' ? '0 0 0 3px rgba(243,242,242,.06), 0 4px 12px ' + n.color + '99' : 'none',
+        haloColor: n.color,
+        haloOpacity: on && eff === 'halo' ? 1 : 0,
+        haloScale: on && eff === 'halo' ? 'scale(1)' : 'scale(.7)',
+        crownOpacity: on && eff === 'crown' ? 1 : 0,
+        onEnter: () => this.setState({ hoverId: n.id }),
+        onLeave: () => this.setState({ hoverId: null }),
+        onClick: (e) => { e.stopPropagation(); this.select(n.id); }
+      };
+    };
+
+    const dots = visible.map(mkDot);
+    const opt = (key, title, note) => ({
+      title: title, note: note,
+      border: key === eff ? 'var(--color-accent)' : 'var(--color-neutral-300)',
+      bg: key === eff ? 'var(--color-accent-100)' : 'transparent',
+      onClick: () => this.setState({ selEffect: key })
+    });
+
+    return {
+      leftDots: dots.slice(0, 3),
+      rightDots: dots.slice(3, 6),
+      overflowLabel: '+' + hidden.length,
+      overflowHovered: s.overflowHover,
+      overflowDots: hidden.map(n => ({
+        title: n.title, color: n.color, fill: this.fillFor(n),
+        onClick: (e) => { e.stopPropagation(); this.select(n.id); }
+      })),
+      dotSize: size + 'px',
+      haloSize: (size + 8) + 'px',
+      haloOffset: (-(size + 8) / 2) + 'px 0 0 ' + (-(size + 8) / 2) + 'px',
+      panelWidth: width + 'px',
+      panelOffset: (-width / 2) + 'px',
+      onOverflowEnter: () => this.setState({ overflowHover: true }),
+      onOverflowLeave: () => this.setState({ overflowHover: false }),
+
+      isFullscreen: s.fullscreen,
+      dotsOpacity: dotsHidden ? 0 : 1,
+      dotsEvents: dotsHidden ? 'none' : 'auto',
+      dimOpacity: s.open ? 1 : 0,
+      dimEvents: s.open ? 'auto' : 'none',
+      menuBarTransform: dotsHidden ? 'translateY(-30px)' : 'none',
+      menuBarOpacity: s.open ? 0.35 : 1,
+
+      panelOpacity: s.open ? 1 : 0,
+      panelTransform: s.open ? 'none' : 'translateY(-12px) scale(.985)',
+      panelEvents: s.open ? 'auto' : 'none',
+
+      activeTitle: active.title,
+      activeColor: active.color,
+      activeFill: this.fillFor(active),
+      activeProgress: active.items.filter(i => i.done).length + '/' + active.items.length,
+      positionLabel: 'note ' + (notes.findIndex(n => n.id === active.id) + 1) + ' of ' + notes.length + ' · last touched first',
+      barWidth: (this.pct(active) * 100).toFixed(0) + '%',
+
+      items: active.items.map((it, i) => ({
+        text: it.text, done: it.done,
+        ink: it.done ? 'rgba(243,242,242,.4)' : '#f3f2f2',
+        strike: it.done ? 'line-through' : 'none',
+        boxBorder: it.done ? active.color : 'rgba(243,242,242,.5)',
+        boxBg: it.done ? 'rgba(243,242,242,.05)' : 'transparent',
+        boxTilt: 'rotate(' + ((i % 3) - 1) * 1.5 + 'deg)',
+        onToggle: () => this.toggleItem(active.id, i)
+      })),
+
+      draft: s.draft,
+      inputRef: this.inputRef,
+      caretLeft: s.draft ? '-9999px' : '1px',
+      onDraft: (e) => this.setState({ draft: e.target.value }),
+      onDraftKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.addItem(); } },
+
+      onDesktopClick: () => { if (s.open) this.setState({ open: false, draft: '' }); else this.select(s.activeId); },
+      stop: (e) => e.stopPropagation(),
+      onRevealEnter: () => this.setState({ revealed: true }),
+      onRevealLeave: () => this.setState({ revealed: false }),
+
+      selOptions: [
+        opt('bright', 'Brightened colour', 'The selected dot just brightens; the rest fade back. Nothing moves, nothing added.'),
+        opt('halo', 'Halo ring', 'A thin ring in the note colour opens around the selected dot; the others shrink back.'),
+        opt('crown', 'Underline stroke', 'A hand-drawn pen stroke tucks under the dot, pointing into the panel below.'),
+        opt('lift', 'Lift + glow', 'The dot grows toward the panel and picks up a soft colour glow.')
+      ],
+
+      fsLabel: s.fullscreen ? 'Fullscreen: on' : 'Simulate fullscreen app',
+      fsBorder: s.fullscreen ? 'var(--color-accent-2)' : 'var(--color-neutral-300)',
+      fsBg: s.fullscreen ? 'var(--color-accent-2-100)' : 'transparent',
+      onToggleFullscreen: () => this.setState(st => ({ fullscreen: !st.fullscreen, revealed: false }))
+    };
+  }
+}
+
+</script>
+</body>
+</html>
