@@ -58,7 +58,7 @@ final class Store: ObservableObject {
     }
 
     var activeIndex: Int { notes.firstIndex { $0.id == activeNoteID } ?? 0 }
-    var activeNote: Note { notes[activeIndex] }
+    var activeNote: Note? { notes.first { $0.id == activeNoteID } }
 
     func select(_ id: UUID) {
         activeNoteID = id
@@ -100,7 +100,7 @@ final class Store: ObservableObject {
 
     func commitDraft() {
         let text = draft.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty else { return }
+        guard !text.isEmpty, !notes.isEmpty else { return }
         notes[activeIndex].items.append(ChecklistItem(text: text))
         draft = ""
     }

@@ -188,6 +188,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func open() {
+        if store.notes.isEmpty {
+            store.newNote()
+        }
         store.isOpen = true
         editorHosting?.layoutSubtreeIfNeeded()
         positionEditor()

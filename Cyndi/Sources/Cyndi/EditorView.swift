@@ -27,26 +27,32 @@ struct EditorView: View {
     var onDelete: () -> Void = {}
     @FocusState private var fieldFocused: Bool
 
-    private var note: Note { store.activeNote }
+    private var note: Note { store.activeNote ?? Note(title: "", color: .printYellow, items: []) }
 
     private let sideMargin: CGFloat = 12
 
     var body: some View {
-        panel
-            .frame(width: 420 + sideMargin * 2, alignment: .center)
-            .padding(.top, bandHeight)
-            .background(
-                Ink.panelBlack.clipShape(
-                    UnevenRoundedRectangle(
-                        topLeadingRadius: 5, bottomLeadingRadius: 20,
-                        bottomTrailingRadius: 20, topTrailingRadius: 5,
-                        style: .continuous)
-                )
+        Group {
+            if store.activeNote != nil {
+                panel
+            } else {
+                Color.clear.frame(width: 420, height: 1)
+            }
+        }
+        .frame(width: 420 + sideMargin * 2, alignment: .center)
+        .padding(.top, bandHeight)
+        .background(
+            Ink.panelBlack.clipShape(
+                UnevenRoundedRectangle(
+                    topLeadingRadius: 5, bottomLeadingRadius: 20,
+                    bottomTrailingRadius: 20, topTrailingRadius: 5,
+                    style: .continuous)
             )
-            .fixedSize()
-            .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
-            .onAppear { fieldFocused = true }
-            .onChange(of: store.activeNoteID) { fieldFocused = true }
+        )
+        .fixedSize()
+        .shadow(color: .black.opacity(0.6), radius: 25, x: 0, y: 26)
+        .onAppear { fieldFocused = true }
+        .onChange(of: store.activeNoteID) { fieldFocused = true }
     }
 
     private var panel: some View {
