@@ -5,9 +5,27 @@ enum Fonts {
     private(set) static var caveatFamily = "Caveat"
     private(set) static var kalamFamily = "Kalam"
 
+    private static func fontURL(_ name: String) -> URL? {
+        let main = Bundle.main
+        if let direct = main.url(forResource: name, withExtension: "ttf", subdirectory: "Fonts") {
+            return direct
+        }
+        let candidates = [
+            main.resourceURL?.appendingPathComponent("Cyndi_Cyndi.bundle"),
+            main.bundleURL.appendingPathComponent("Cyndi_Cyndi.bundle"),
+        ].compactMap { $0 }
+        for path in candidates {
+            if let bundle = Bundle(url: path),
+               let url = bundle.url(forResource: name, withExtension: "ttf", subdirectory: "Fonts") {
+                return url
+            }
+        }
+        return nil
+    }
+
     static func register() {
         for name in ["Caveat", "Kalam-Regular"] {
-            guard let url = Bundle.module.url(forResource: name, withExtension: "ttf", subdirectory: "Fonts") else {
+            guard let url = fontURL(name) else {
                 continue
             }
             var error: Unmanaged<CFError>?
