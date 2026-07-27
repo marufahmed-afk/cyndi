@@ -26,7 +26,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var showDotsItem: NSMenuItem!
     private var hotkey: Hotkey?
     private var keyMonitor: Any?
-    private var menuBarTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Fonts.register()
@@ -84,25 +83,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         panel.present()
-        refreshMenuBarVisibility()
-        startMenuBarTimer()
-    }
-
-    private func startMenuBarTimer() {
-        menuBarTimer?.invalidate()
-        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.refreshMenuBarVisibility() }
-        }
-        RunLoop.main.add(timer, forMode: .common)
-        menuBarTimer = timer
-    }
-
-    private func refreshMenuBarVisibility() {
-        guard let screen = NSScreen.screenWithMouse else { return }
-        let visible = screen.menuBarVisible
-        if store.menuBarVisible != visible {
-            store.menuBarVisible = visible
-        }
     }
 
     private func newChecklist() {
@@ -188,11 +168,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func screensChanged() {
         layout()
-        refreshMenuBarVisibility()
     }
 
     @objc private func otherAppActivated(_ note: Notification) {
-        refreshMenuBarVisibility()
         guard store.isOpen else { return }
         let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {

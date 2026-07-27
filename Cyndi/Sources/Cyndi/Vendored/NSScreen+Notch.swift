@@ -10,10 +10,6 @@ extension NSScreen {
         auxiliaryTopLeftArea != nil && auxiliaryTopRightArea != nil
     }
 
-    var menuBarVisible: Bool {
-        hasNotch || frame.maxY - visibleFrame.maxY > 1
-    }
-
     var menuBarHeight: CGFloat {
         let h = frame.maxY - visibleFrame.maxY
         return h > 0 ? h : 30

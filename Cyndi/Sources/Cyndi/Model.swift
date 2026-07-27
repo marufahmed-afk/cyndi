@@ -44,7 +44,6 @@ final class Store: ObservableObject {
     @Published var notes: [Note] { didSet { persist() } }
     @Published var activeNoteID: UUID
     @Published var isOpen: Bool = false
-    @Published var menuBarVisible: Bool = true
     @Published var draft: String = ""
     @Published var editingItem: Bool = false
     @Published var showDots: Bool {

@@ -32,7 +32,8 @@ struct EditorView: View {
         case draft
     }
 
-    @FocusState private var focus: Field?
+    @State private var focus: Field?
+    @FocusState private var titleFocused: Bool
 
     private var note: Note { store.activeNote ?? Note(title: "", colorID: NoteColor.printYellow.id, items: []) }
 
@@ -61,7 +62,11 @@ struct EditorView: View {
         .onAppear { focus = .draft }
         .onChange(of: store.activeNoteID) { focus = .draft }
         .onChange(of: focus) {
+            titleFocused = (focus == .title)
             if case .item = focus { store.editingItem = true } else { store.editingItem = false }
+        }
+        .onChange(of: titleFocused) {
+            if titleFocused { focus = .title }
         }
     }
 
@@ -99,7 +104,7 @@ struct EditorView: View {
                     .textFieldStyle(.plain)
                     .font(Fonts.caveat(28))
                     .foregroundStyle(Ink.primary)
-                    .focused($focus, equals: .title)
+                    .focused($titleFocused)
                     .onSubmit { focus = firstFieldAfterTitle }
             }
             .fixedSize(horizontal: false, vertical: true)
@@ -148,6 +153,16 @@ struct EditorView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 34)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 1)
+        .background(rowHighlight(focus == .item(item.id)))
+        .padding(.horizontal, -6)
+        .padding(.vertical, -1)
+    }
+
+    private func rowHighlight(_ active: Bool) -> some View {
+        RoundedRectangle(cornerRadius: 6, style: .continuous)
+            .fill(Ink.white(active ? 0.05 : 0))
     }
 
     private func itemTextBinding(_ item: ChecklistItem) -> Binding<String> {
@@ -163,23 +178,37 @@ struct EditorView: View {
                 .strokeBorder(Ink.white(0.28), style: StrokeStyle(lineWidth: 1.5, dash: [3, 2]))
                 .frame(width: 17, height: 17)
                 .rotationEffect(.degrees(-1.4))
-            EditableItemField(
-                text: $store.draft,
-                isFocused: focus == .draft,
-                font: Fonts.kalamNS(17),
-                textColor: NSColor(Ink.primary),
-                strikethrough: false,
-                placeholder: "start typing…",
-                placeholderColor: NSColor(Ink.white(0.30)),
-                onFocus: { focus = .draft },
-                onSubmit: { store.commitDraft(); focus = .draft },
-                onMoveUp: { focus = fieldBefore(.draft) },
-                onMoveDown: {},
-                onDeleteWhenEmpty: {}
-            )
+            ZStack(alignment: .leading) {
+                if store.draft.isEmpty {
+                    Text("start typing…")
+                        .font(Fonts.kalam(17))
+                        .foregroundStyle(Ink.white(0.30))
+                        .allowsHitTesting(false)
+                }
+                EditableItemField(
+                    text: $store.draft,
+                    isFocused: focus == .draft,
+                    font: Fonts.kalamNS(17),
+                    textColor: NSColor(Ink.primary),
+                    strikethrough: false,
+                    placeholder: "",
+                    placeholderColor: NSColor(Ink.white(0.30)),
+                    clearOnSubmit: true,
+                    onFocus: { focus = .draft },
+                    onSubmit: { store.commitDraft(); focus = .draft },
+                    onMoveUp: { focus = fieldBefore(.draft) },
+                    onMoveDown: {},
+                    onDeleteWhenEmpty: {}
+                )
+            }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 34)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 1)
+        .background(rowHighlight(focus == .draft))
+        .padding(.horizontal, -6)
+        .padding(.vertical, -1)
     }
 
     private var firstFieldAfterTitle: Field {

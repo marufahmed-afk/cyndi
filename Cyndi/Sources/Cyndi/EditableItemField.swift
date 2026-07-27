@@ -9,6 +9,7 @@ struct EditableItemField: NSViewRepresentable {
     var strikethrough: Bool
     var placeholder: String
     var placeholderColor: NSColor
+    var clearOnSubmit: Bool = false
 
     var onFocus: () -> Void = {}
     var onSubmit: () -> Void = {}
@@ -41,16 +42,17 @@ struct EditableItemField: NSViewRepresentable {
             string: placeholder,
             attributes: [.font: font, .foregroundColor: placeholderColor])
 
-        if field.currentEditor() == nil {
+        if let editor = field.currentEditor() {
+            if editor.string != text {
+                editor.string = text
+            }
+        } else {
             field.attributedStringValue = Self.styled(
                 text, font: font, color: textColor, strikethrough: strikethrough)
         }
 
         if isFocused {
-            DispatchQueue.main.async {
-                guard let window = field.window, field.currentEditor() == nil else { return }
-                window.makeFirstResponder(field)
-            }
+            context.coordinator.focusWhenReady(field)
         }
     }
 
@@ -70,6 +72,22 @@ struct EditableItemField: NSViewRepresentable {
 
         init(_ parent: EditableItemField) { self.parent = parent }
 
+        func focusWhenReady(_ field: NSTextField, attempt: Int = 0) {
+            let work = { [weak field] in
+                guard let field, field.currentEditor() == nil else { return }
+                guard let window = field.window, window.isKeyWindow else {
+                    if attempt < 30 { self.focusWhenReady(field, attempt: attempt + 1) }
+                    return
+                }
+                window.makeFirstResponder(field)
+            }
+            if attempt == 0 {
+                DispatchQueue.main.async(execute: work)
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.02, execute: work)
+            }
+        }
+
         func controlTextDidBeginEditing(_ obj: Notification) {
             parent.onFocus()
         }
@@ -83,6 +101,9 @@ struct EditableItemField: NSViewRepresentable {
                      doCommandBy selector: Selector) -> Bool {
             switch selector {
             case #selector(NSResponder.insertNewline(_:)):
+                if parent.clearOnSubmit {
+                    textView.string = ""
+                }
                 parent.onSubmit()
                 return true
             case #selector(NSResponder.moveUp(_:)):
@@ -90,6 +111,12 @@ struct EditableItemField: NSViewRepresentable {
                 return true
             case #selector(NSResponder.moveDown(_:)):
                 parent.onMoveDown()
+                return true
+            case #selector(NSResponder.insertTab(_:)):
+                parent.onMoveDown()
+                return true
+            case #selector(NSResponder.insertBacktab(_:)):
+                parent.onMoveUp()
                 return true
             case #selector(NSResponder.deleteBackward(_:)):
                 if textView.string.isEmpty {
