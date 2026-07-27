@@ -2,6 +2,10 @@ import SwiftUI
 import AppKit
 import Carbon.HIToolbox
 
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 @main
 struct CyndiMain {
     static func main() {
@@ -17,7 +21,7 @@ struct CyndiMain {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = Store()
     private var panel: NotchPanel!
-    private var hosting: NSHostingView<RootOverlayView>?
+    private var hosting: FirstMouseHostingView<RootOverlayView>?
     private var statusItem: NSStatusItem!
     private var showDotsItem: NSMenuItem!
     private var hotkey: Hotkey?
@@ -69,9 +73,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch event.keyCode {
             case UInt16(kVK_Escape):
                 self.close(); return nil
-            case UInt16(kVK_LeftArrow) where self.store.draft.isEmpty:
+            case UInt16(kVK_LeftArrow) where self.store.draft.isEmpty && !self.store.editingItem:
                 self.step(-1); return nil
-            case UInt16(kVK_RightArrow) where self.store.draft.isEmpty:
+            case UInt16(kVK_RightArrow) where self.store.draft.isEmpty && !self.store.editingItem:
                 self.step(1); return nil
             default:
                 return event
@@ -132,7 +136,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onTapDot: { [weak self] id in self?.tapDot(id) },
             onDelete: { [weak self] in self?.deleteChecklist() },
             onDimClick: { [weak self] in self?.close() })
-        let hosting = NSHostingView(rootView: root)
+        let hosting = FirstMouseHostingView(rootView: root)
         hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
         self.hosting = hosting
@@ -162,7 +166,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func screensChanged() { layout() }
+    @objc private func screensChanged() {
+        layout()
+    }
 
     @objc private func otherAppActivated(_ note: Notification) {
         guard store.isOpen else { return }
@@ -194,6 +200,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func close() {
         store.isOpen = false
         store.draft = ""
+        store.editingItem = false
         applyFrame()
         panel.resignKey()
     }

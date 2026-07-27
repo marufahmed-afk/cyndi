@@ -34,14 +34,15 @@ struct DotsView: View {
 
     private var notchHalf: CGFloat { 110 }
     private var gap: CGFloat { 10 }
+    private var hit: CGFloat { 20 }
     private var leftCapacity: Int { 3 }
 
     var body: some View {
         GeometryReader { geo in
             let center = geo.size.width / 2
-            let visible = Array(store.notes.prefix(6))
+            let visible = Array(store.notes.suffix(6))
             let leftNotes = Array(visible.prefix(leftCapacity))
-            let rightNotes = Array(visible.dropFirst(leftCapacity))
+            let rightNotes = Array(visible.dropFirst(leftNotes.count))
 
             ZStack(alignment: .topLeading) {
                 dotGroup(leftNotes.reversed(), anchorX: center - notchHalf, rightToLeft: true, height: geo.size.height)
@@ -51,9 +52,9 @@ struct DotsView: View {
     }
 
     private func dotGroup(_ notes: [Note], anchorX: CGFloat, rightToLeft: Bool, height: CGFloat) -> some View {
-        let hit: CGFloat = 20
+        let step = hit + gap - 5
         return ForEach(Array(notes.enumerated()), id: \.element.id) { idx, note in
-            let offset = CGFloat(idx) * (hit + gap - 5)
+            let offset = CGFloat(idx) * step
             let x = rightToLeft ? anchorX - hit - offset : anchorX + offset
             dot(note)
                 .frame(width: hit, height: height)
