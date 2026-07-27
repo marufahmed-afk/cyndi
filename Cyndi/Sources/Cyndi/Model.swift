@@ -45,6 +45,7 @@ final class Store: ObservableObject {
     @Published var activeNoteID: UUID
     @Published var isOpen: Bool = false
     @Published var draft: String = ""
+    @Published var editingItem: Bool = false
     @Published var showDots: Bool {
         didSet { UserDefaults.standard.set(showDots, forKey: Self.showDotsKey) }
     }
@@ -104,6 +105,29 @@ final class Store: ObservableObject {
         guard let n = notes.firstIndex(where: { $0.id == noteID }),
               let i = notes[n].items.firstIndex(where: { $0.id == itemID }) else { return }
         notes[n].items[i].done.toggle()
+    }
+
+    func setItemText(_ text: String, noteID: UUID, itemID: UUID) {
+        guard let n = notes.firstIndex(where: { $0.id == noteID }),
+              let i = notes[n].items.firstIndex(where: { $0.id == itemID }) else { return }
+        notes[n].items[i].text = text
+    }
+
+    func deleteItem(noteID: UUID, itemID: UUID) {
+        guard let n = notes.firstIndex(where: { $0.id == noteID }) else { return }
+        notes[n].items.removeAll { $0.id == itemID }
+    }
+
+    @discardableResult
+    func insertItem(after itemID: UUID?, noteID: UUID) -> UUID? {
+        guard let n = notes.firstIndex(where: { $0.id == noteID }) else { return nil }
+        let item = ChecklistItem(text: "")
+        if let itemID, let i = notes[n].items.firstIndex(where: { $0.id == itemID }) {
+            notes[n].items.insert(item, at: i + 1)
+        } else {
+            notes[n].items.append(item)
+        }
+        return item.id
     }
 
     func commitDraft() {

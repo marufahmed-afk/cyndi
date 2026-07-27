@@ -1,5 +1,6 @@
 import SwiftUI
 import CoreText
+import AppKit
 
 enum Fonts {
     private(set) static var caveatFamily = "Caveat"
@@ -45,5 +46,14 @@ enum Fonts {
 
     static func kalam(_ size: CGFloat) -> Font {
         .custom(kalamFamily, fixedSize: size)
+    }
+
+    static func kalamNS(_ size: CGFloat) -> NSFont {
+        nsFont(family: kalamFamily, size: size)
+    }
+
+    private static func nsFont(family: String, size: CGFloat) -> NSFont {
+        let descriptor = NSFontDescriptor(fontAttributes: [.family: family])
+        return NSFont(descriptor: descriptor, size: size) ?? .systemFont(ofSize: size)
     }
 }

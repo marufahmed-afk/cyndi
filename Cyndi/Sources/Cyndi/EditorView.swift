@@ -25,8 +25,14 @@ struct EditorView: View {
     @ObservedObject var store: Store
     var bandHeight: CGFloat
     var onDelete: () -> Void = {}
-    @FocusState private var fieldFocused: Bool
-    @FocusState private var titleFocused: Bool
+
+    enum Field: Hashable {
+        case title
+        case item(UUID)
+        case draft
+    }
+
+    @FocusState private var focus: Field?
 
     private var note: Note { store.activeNote ?? Note(title: "", colorID: NoteColor.printYellow.id, items: []) }
 
@@ -52,8 +58,11 @@ struct EditorView: View {
         .clipShape(editorShape)
         .shadow(color: .black.opacity(0.5), radius: 22, x: 0, y: 10)
         .padding(Self.shadowBleed)
-        .onAppear { fieldFocused = true }
-        .onChange(of: store.activeNoteID) { fieldFocused = true }
+        .onAppear { focus = .draft }
+        .onChange(of: store.activeNoteID) { focus = .draft }
+        .onChange(of: focus) {
+            if case .item = focus { store.editingItem = true } else { store.editingItem = false }
+        }
     }
 
     private var editorShape: NotchPanelShape {
@@ -90,8 +99,8 @@ struct EditorView: View {
                     .textFieldStyle(.plain)
                     .font(Fonts.caveat(28))
                     .foregroundStyle(Ink.primary)
-                    .focused($titleFocused)
-                    .onSubmit { titleFocused = false; fieldFocused = true }
+                    .focused($focus, equals: .title)
+                    .onSubmit { focus = firstFieldAfterTitle }
             }
             .fixedSize(horizontal: false, vertical: true)
             Spacer()
@@ -120,15 +129,32 @@ struct EditorView: View {
         let rot = (Double(index % 3) - 1) * 1.5
         return HStack(spacing: 11) {
             HandCheckbox(item: item, color: note.color.color, rotation: rot)
-            Text(item.text)
-                .font(Fonts.kalam(17))
-                .foregroundStyle(item.done ? Ink.white(0.40) : Ink.primary)
-                .strikethrough(item.done, color: Ink.white(0.40))
-            Spacer()
+                .contentShape(Rectangle())
+                .onTapGesture { store.toggleItem(noteID: note.id, itemID: item.id) }
+            EditableItemField(
+                text: itemTextBinding(item),
+                isFocused: focus == .item(item.id),
+                font: Fonts.kalamNS(17),
+                textColor: NSColor(item.done ? Ink.white(0.40) : Ink.primary),
+                strikethrough: item.done,
+                placeholder: "",
+                placeholderColor: NSColor(Ink.white(0.30)),
+                onFocus: { focus = .item(item.id) },
+                onSubmit: { addItem(after: item.id) },
+                onMoveUp: { focus = fieldBefore(.item(item.id)) },
+                onMoveDown: { focus = fieldAfter(.item(item.id)) },
+                onDeleteWhenEmpty: { deleteItem(item.id) }
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 34)
-        .contentShape(Rectangle())
-        .onTapGesture { store.toggleItem(noteID: note.id, itemID: item.id) }
+    }
+
+    private func itemTextBinding(_ item: ChecklistItem) -> Binding<String> {
+        Binding(
+            get: { store.activeNote?.items.first { $0.id == item.id }?.text ?? "" },
+            set: { store.setItemText($0, noteID: note.id, itemID: item.id) }
+        )
     }
 
     private var draftRow: some View {
@@ -137,22 +163,66 @@ struct EditorView: View {
                 .strokeBorder(Ink.white(0.28), style: StrokeStyle(lineWidth: 1.5, dash: [3, 2]))
                 .frame(width: 17, height: 17)
                 .rotationEffect(.degrees(-1.4))
-            ZStack(alignment: .leading) {
-                if store.draft.isEmpty {
-                    Text("start typing…")
-                        .font(Fonts.kalam(17))
-                        .foregroundStyle(Ink.white(0.30))
-                }
-                TextField("", text: $store.draft)
-                    .textFieldStyle(.plain)
-                    .font(Fonts.kalam(17))
-                    .foregroundStyle(Ink.primary)
-                    .focused($fieldFocused)
-                    .onSubmit { store.commitDraft(); fieldFocused = true }
-            }
-            Spacer()
+            EditableItemField(
+                text: $store.draft,
+                isFocused: focus == .draft,
+                font: Fonts.kalamNS(17),
+                textColor: NSColor(Ink.primary),
+                strikethrough: false,
+                placeholder: "start typing…",
+                placeholderColor: NSColor(Ink.white(0.30)),
+                onFocus: { focus = .draft },
+                onSubmit: { store.commitDraft(); focus = .draft },
+                onMoveUp: { focus = fieldBefore(.draft) },
+                onMoveDown: {},
+                onDeleteWhenEmpty: {}
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 34)
+    }
+
+    private var firstFieldAfterTitle: Field {
+        if let first = note.items.first { return .item(first.id) }
+        return .draft
+    }
+
+    private func fieldBefore(_ field: Field) -> Field {
+        let items = note.items
+        switch field {
+        case .title:
+            return .title
+        case .item(let id):
+            guard let idx = items.firstIndex(where: { $0.id == id }) else { return .title }
+            return idx > 0 ? .item(items[idx - 1].id) : .title
+        case .draft:
+            return items.last.map { .item($0.id) } ?? .title
+        }
+    }
+
+    private func fieldAfter(_ field: Field) -> Field {
+        let items = note.items
+        switch field {
+        case .title:
+            return firstFieldAfterTitle
+        case .item(let id):
+            guard let idx = items.firstIndex(where: { $0.id == id }) else { return .draft }
+            return idx < items.count - 1 ? .item(items[idx + 1].id) : .draft
+        case .draft:
+            return .draft
+        }
+    }
+
+    private func addItem(after itemID: UUID) {
+        if let newID = store.insertItem(after: itemID, noteID: note.id) {
+            focus = .item(newID)
+        }
+    }
+
+    private func deleteItem(_ itemID: UUID) {
+        let target = fieldBefore(.item(itemID))
+        store.deleteItem(noteID: note.id, itemID: itemID)
+        focus = target
     }
 
     private var progressBar: some View {

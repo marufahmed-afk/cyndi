@@ -69,9 +69,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             switch event.keyCode {
             case UInt16(kVK_Escape):
                 self.close(); return nil
-            case UInt16(kVK_LeftArrow) where self.store.draft.isEmpty:
+            case UInt16(kVK_LeftArrow) where self.store.draft.isEmpty && !self.store.editingItem:
                 self.step(-1); return nil
-            case UInt16(kVK_RightArrow) where self.store.draft.isEmpty:
+            case UInt16(kVK_RightArrow) where self.store.draft.isEmpty && !self.store.editingItem:
                 self.step(1); return nil
             default:
                 return event
@@ -194,6 +194,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func close() {
         store.isOpen = false
         store.draft = ""
+        store.editingItem = false
         applyFrame()
         panel.resignKey()
     }
