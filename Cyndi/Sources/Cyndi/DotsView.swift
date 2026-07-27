@@ -32,33 +32,41 @@ struct DotsView: View {
     @ObservedObject var store: Store
     let onTapNote: (UUID) -> Void
 
-    private var notchHalf: CGFloat { 110 }
     private var gap: CGFloat { 10 }
-    private var leftCapacity: Int { 3 }
+    private var hit: CGFloat { 20 }
+    private var leftInset: CGFloat { 20 }
+    private var maxVisible: Int { 6 }
+
+    private var step: CGFloat { hit + gap - 5 }
 
     var body: some View {
         GeometryReader { geo in
-            let center = geo.size.width / 2
-            let visible = Array(store.notes.prefix(6))
-            let leftNotes = Array(visible.prefix(leftCapacity))
-            let rightNotes = Array(visible.dropFirst(leftCapacity))
+            let overflow = max(0, store.notes.count - maxVisible)
+            let visible = Array(store.notes.suffix(maxVisible))
 
             ZStack(alignment: .topLeading) {
-                dotGroup(leftNotes.reversed(), anchorX: center - notchHalf, rightToLeft: true, height: geo.size.height)
-                dotGroup(rightNotes, anchorX: center + notchHalf, rightToLeft: false, height: geo.size.height)
+                if overflow > 0 {
+                    overflowPill(overflow)
+                        .frame(width: hit, height: geo.size.height)
+                        .position(x: leftInset + hit / 2, y: geo.size.height / 2)
+                }
+                ForEach(Array(visible.enumerated()), id: \.element.id) { idx, note in
+                    let slot = overflow > 0 ? idx + 1 : idx
+                    let x = leftInset + CGFloat(slot) * step
+                    dot(note)
+                        .frame(width: hit, height: geo.size.height)
+                        .position(x: x + hit / 2, y: geo.size.height / 2)
+                }
             }
         }
     }
 
-    private func dotGroup(_ notes: [Note], anchorX: CGFloat, rightToLeft: Bool, height: CGFloat) -> some View {
-        let hit: CGFloat = 20
-        return ForEach(Array(notes.enumerated()), id: \.element.id) { idx, note in
-            let offset = CGFloat(idx) * (hit + gap - 5)
-            let x = rightToLeft ? anchorX - hit - offset : anchorX + offset
-            dot(note)
-                .frame(width: hit, height: height)
-                .position(x: x + hit / 2, y: height / 2)
-        }
+    private func overflowPill(_ count: Int) -> some View {
+        Text("+\(count)")
+            .font(Fonts.kalam(11))
+            .foregroundStyle(Ink.white(0.55))
+            .frame(width: hit, height: 15)
+            .background(Capsule().fill(Ink.white(0.09)))
     }
 
     private func dot(_ note: Note) -> some View {

@@ -44,6 +44,7 @@ final class Store: ObservableObject {
     @Published var notes: [Note] { didSet { persist() } }
     @Published var activeNoteID: UUID
     @Published var isOpen: Bool = false
+    @Published var menuBarVisible: Bool = true
     @Published var draft: String = ""
     @Published var showDots: Bool {
         didSet { UserDefaults.standard.set(showDots, forKey: Self.showDotsKey) }
@@ -55,7 +56,7 @@ final class Store: ObservableObject {
     init() {
         let loaded = storage.load()
         notes = loaded
-        activeNoteID = loaded.first?.id ?? UUID()
+        activeNoteID = loaded.last?.id ?? UUID()
         let defaults = UserDefaults.standard
         showDots = defaults.object(forKey: Self.showDotsKey) as? Bool ?? true
     }
@@ -77,7 +78,7 @@ final class Store: ObservableObject {
     func newNote() -> UUID {
         let color = NoteColor.palette[notes.count % NoteColor.palette.count]
         let note = Note(title: "untitled", colorID: color.id, items: [])
-        notes.insert(note, at: 0)
+        notes.append(note)
         activeNoteID = note.id
         draft = ""
         return note.id

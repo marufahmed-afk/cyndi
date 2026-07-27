@@ -2,6 +2,10 @@ import SwiftUI
 import AppKit
 import Carbon.HIToolbox
 
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 @main
 struct CyndiMain {
     static func main() {
@@ -17,11 +21,12 @@ struct CyndiMain {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = Store()
     private var panel: NotchPanel!
-    private var hosting: NSHostingView<RootOverlayView>?
+    private var hosting: FirstMouseHostingView<RootOverlayView>?
     private var statusItem: NSStatusItem!
     private var showDotsItem: NSMenuItem!
     private var hotkey: Hotkey?
     private var keyMonitor: Any?
+    private var menuBarTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Fonts.register()
@@ -79,6 +84,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         panel.present()
+        refreshMenuBarVisibility()
+        startMenuBarTimer()
+    }
+
+    private func startMenuBarTimer() {
+        menuBarTimer?.invalidate()
+        let timer = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
+            MainActor.assumeIsolated { self?.refreshMenuBarVisibility() }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        menuBarTimer = timer
+    }
+
+    private func refreshMenuBarVisibility() {
+        guard let screen = NSScreen.screenWithMouse else { return }
+        let visible = screen.menuBarVisible
+        if store.menuBarVisible != visible {
+            store.menuBarVisible = visible
+        }
     }
 
     private func newChecklist() {
@@ -132,7 +156,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             onTapDot: { [weak self] id in self?.tapDot(id) },
             onDelete: { [weak self] in self?.deleteChecklist() },
             onDimClick: { [weak self] in self?.close() })
-        let hosting = NSHostingView(rootView: root)
+        let hosting = FirstMouseHostingView(rootView: root)
         hosting.wantsLayer = true
         hosting.layer?.backgroundColor = .clear
         self.hosting = hosting
@@ -162,9 +186,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc private func screensChanged() { layout() }
+    @objc private func screensChanged() {
+        layout()
+        refreshMenuBarVisibility()
+    }
 
     @objc private func otherAppActivated(_ note: Notification) {
+        refreshMenuBarVisibility()
         guard store.isOpen else { return }
         let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
         if app?.processIdentifier != ProcessInfo.processInfo.processIdentifier {

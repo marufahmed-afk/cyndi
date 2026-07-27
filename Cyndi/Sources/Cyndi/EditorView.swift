@@ -110,7 +110,7 @@ struct EditorView: View {
     }
 
     private var positionLine: some View {
-        Text("note \(store.activeIndex + 1) of \(store.notes.count) · last touched first")
+        Text("note \(store.activeIndex + 1) of \(store.notes.count) · newest on the right")
             .font(Fonts.kalam(11.5))
             .foregroundStyle(Ink.white(0.30))
             .padding(.bottom, 8)
