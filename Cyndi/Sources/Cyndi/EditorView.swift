@@ -255,27 +255,32 @@ struct EditorView: View {
     }
 
     private var progressBar: some View {
-        SketchRoundedRect.small
+        Capsule()
             .strokeBorder(Ink.white(0.24), lineWidth: 1.3)
             .background(
                 GeometryReader { g in
                     note.color.color
                         .frame(width: g.size.width * note.completion)
-                        .clipShape(SketchRoundedRect.small)
+                        .clipShape(Capsule())
                 }
             )
             .frame(height: 7)
-            .padding(.top, 13)
+            .padding(.top, 20)
     }
 
-    private var footer: some View {
-        HStack {
-            Text("↵ new item · ← → switch · ⌘N new · ⌘⌫ delete")
-            Spacer()
-            Text("⌘⇧Space to close · saved locally")
+    @ViewBuilder private var footer: some View {
+        if store.showFooter {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("↵ new item · ↑↓ / ⇥ move · ⌫ delete item · click ☐ toggle")
+                Text("⌘N new · ⌘⌫ delete list · ⌘1–6 / ←→ switch")
+                Text("esc · ⌘⇧Space to close · saved locally")
+            }
+            .font(Fonts.kalam(11.5))
+            .foregroundStyle(Ink.white(0.40))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 12)
+        } else {
+            Color.clear.frame(height: 6)
         }
-        .font(Fonts.kalam(11.5))
-        .foregroundStyle(Ink.white(0.40))
-        .padding(.top, 12)
     }
 }
