@@ -24,6 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hosting: FirstMouseHostingView<RootOverlayView>?
     private var statusItem: NSStatusItem!
     private var showDotsItem: NSMenuItem!
+    private var showFooterItem: NSMenuItem!
     private var hotkey: Hotkey?
     private var keyMonitor: Any?
 
@@ -120,6 +121,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         showDotsItem = NSMenuItem(title: "Show checklist dots", action: #selector(toggleShowDots), keyEquivalent: "")
         showDotsItem.state = store.showDots ? .on : .off
         menu.addItem(showDotsItem)
+        showFooterItem = NSMenuItem(title: "Show shortcut footer", action: #selector(toggleShowFooter), keyEquivalent: "")
+        showFooterItem.state = store.showFooter ? .on : .off
+        menu.addItem(showFooterItem)
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         menu.items.forEach { $0.target = self }
@@ -185,6 +189,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func toggleShowDots() {
         store.showDots.toggle()
         showDotsItem.state = store.showDots ? .on : .off
+    }
+
+    @objc private func toggleShowFooter() {
+        store.showFooter.toggle()
+        showFooterItem.state = store.showFooter ? .on : .off
     }
 
     private func open() {

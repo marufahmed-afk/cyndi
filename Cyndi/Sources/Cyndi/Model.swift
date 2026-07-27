@@ -49,9 +49,13 @@ final class Store: ObservableObject {
     @Published var showDots: Bool {
         didSet { UserDefaults.standard.set(showDots, forKey: Self.showDotsKey) }
     }
+    @Published var showFooter: Bool {
+        didSet { UserDefaults.standard.set(showFooter, forKey: Self.showFooterKey) }
+    }
 
     private let storage = NoteStorage()
     private static let showDotsKey = "showDots"
+    private static let showFooterKey = "showFooter"
 
     init() {
         let loaded = storage.load()
@@ -59,6 +63,7 @@ final class Store: ObservableObject {
         activeNoteID = loaded.last?.id ?? UUID()
         let defaults = UserDefaults.standard
         showDots = defaults.object(forKey: Self.showDotsKey) as? Bool ?? true
+        showFooter = defaults.object(forKey: Self.showFooterKey) as? Bool ?? true
     }
 
     var activeIndex: Int { notes.firstIndex { $0.id == activeNoteID } ?? 0 }
