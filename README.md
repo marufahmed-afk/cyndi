@@ -39,3 +39,4 @@ Shipping via Homebrew (see **Install**), distributed as a signed + notarized app
 
 - **Minimum macOS**: 14
 - **Stack**: SwiftUI / AppKit
+- **Cutting a release**: `Cyndi/docs/RELEASING.md`
