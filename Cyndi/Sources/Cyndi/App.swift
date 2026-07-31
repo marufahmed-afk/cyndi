@@ -30,6 +30,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Fonts.register()
+        setupMainMenu()
         setupStatusItem()
         setupPanel()
         layout()
@@ -110,6 +111,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let next = (store.activeIndex + delta + count) % count
         store.select(store.notes[next].id)
         panel.makeKey()
+    }
+
+    private func setupMainMenu() {
+        let main = NSMenu()
+
+        let appItem = NSMenuItem()
+        appItem.submenu = NSMenu()
+        main.addItem(appItem)
+
+        let editItem = NSMenuItem()
+        let edit = NSMenu(title: "Edit")
+        let entries: [(String, Selector, String, NSEvent.ModifierFlags)] = [
+            ("Undo", Selector(("undo:")), "z", [.command]),
+            ("Redo", Selector(("redo:")), "z", [.command, .shift]),
+            ("Cut", #selector(NSText.cut(_:)), "x", [.command]),
+            ("Copy", #selector(NSText.copy(_:)), "c", [.command]),
+            ("Paste", #selector(NSText.paste(_:)), "v", [.command]),
+            ("Paste and Match Style",
+             #selector(NSTextView.pasteAsPlainText(_:)), "v", [.command, .option, .shift]),
+            ("Select All", #selector(NSText.selectAll(_:)), "a", [.command]),
+        ]
+        for (title, action, key, mods) in entries {
+            let item = NSMenuItem(title: title, action: action, keyEquivalent: key)
+            item.keyEquivalentModifierMask = mods
+            item.target = nil
+            edit.addItem(item)
+        }
+        editItem.submenu = edit
+        main.addItem(editItem)
+
+        NSApp.mainMenu = main
     }
 
     private func setupStatusItem() {
